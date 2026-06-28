@@ -67,129 +67,91 @@ function fmtDate(d) {
   return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', weekday: 'long' });
 }
 
-/* ---------- Layout templates (гравитация значимости) ---------- */
-function templateFor(n) {
-  // возвращает массив {top,left,w,h,rot} в % относительно canvas (canvas выше viewport)
-  const T = {
-    1: [{ top: 18, left: 14, w: 72, h: 46, rot: -2 }],
-    2: [{ top: 10, left: 10, w: 64, h: 38, rot: -3 }, { top: 46, left: 34, w: 56, h: 34, rot: 4 }],
-    3: [{ top: 6, left: 22, w: 58, h: 34, rot: -2 }, { top: 34, left: 4, w: 46, h: 28, rot: 5 }, { top: 38, left: 50, w: 46, h: 28, rot: -4 }],
-  };
-  if (T[n]) return T[n];
-  // для большего числа — кластер вокруг центра с уменьшением к периферии
-  const arr = [];
-  const cols = Math.ceil(Math.sqrt(n));
-  for (let i = 0; i < n; i++) {
-    const row = Math.floor(i / cols), col = i % cols;
-    arr.push({
-      top: 4 + row * (86 / Math.ceil(n / cols)) + (Math.random() * 6 - 3),
-      left: 2 + col * (94 / cols) + (Math.random() * 6 - 3),
-      w: 40 + Math.random() * 10,
-      h: 26 + Math.random() * 8,
-      rot: Math.random() * 10 - 5,
-    });
-  }
-  return arr;
+/* ===================== RENDER: DAY (horizontal stream, по часам) ===================== */
+function buildCard(ev, day, idx, listLen, onTap) {
+  const scale = 0.55 + ev.significance * 0.45; // гравитация значимости -> размер
+  const card = document.createElement('div');
+  card.className = 'card';
+  if (day.hasDocs && Math.abs(idx - Math.floor(listLen / 2)) < 1) card.classList.add('card--doc-near');
+  const h = Math.round(window.innerHeight * 0.62 * scale);
+  card.style.height = h + 'px';
+  card.style.width = Math.round(h * 0.78) + 'px';
+  card.style.marginTop = (idx % 2 === 0 ? -1 : 1) * (10 + ev.significance * 14) + 'px';
+  card.style.transform = `rotate(${(idx % 2 === 0 ? -1 : 1) * (2 + Math.random() * 3)}deg)`;
+  card.innerHTML = `<img src="${ev.src}" alt=""><span class="card-label">${ev.hour}:00</span>`;
+  attachLongPress(card, ev);
+  if (onTap) card.addEventListener('click', () => { if (!card.classList.contains('card--pressed')) onTap(); });
+  return card;
 }
 
-/* ===================== RENDER: DAY ===================== */
 function renderDay(dayIdx) {
   const day = WEEK[dayIdx];
   const visible = day.events.filter(e => !e.isJunk);
   const junk = day.events.filter(e => e.isJunk);
-  const layout = templateFor(visible.length);
 
   STAGE.className = 'stage stage--day';
-  const canvasHeight = Math.max(window.innerHeight * 1.6, visible.length * 130);
   const canvas = document.createElement('div');
   canvas.className = 'stage-canvas';
-  canvas.style.height = canvasHeight + 'px';
 
   visible.forEach((ev, i) => {
-    const L = layout[i] || layout[layout.length - 1];
-    const scale = 0.7 + ev.significance * 0.55;
-    const card = document.createElement('div');
-    card.className = 'card';
-    if (ev.hour && Math.random() < 0.5 && !day.hasDocs === false) {} // noop guard
-    if (day.hasDocs && Math.abs(i - Math.floor(visible.length / 2)) < 1) card.classList.add('card--doc-near');
-    const baseW = 150 * scale;
-    card.style.width = baseW + 'px';
-    card.style.height = (baseW * 1.22) + 'px';
-    card.style.top = (L.top / 100 * canvasHeight) + 'px';
-    card.style.left = (L.left + '%');
-    card.style.transform = `rotate(${L.rot}deg)`;
-    card.style.zIndex = Math.round(ev.significance * 10) + 1;
-    card.innerHTML = `<img src="${ev.src}" alt=""><span class="card-label">${ev.hour}:00</span>`;
-    attachLongPress(card, ev);
-    attachTapZoom(card, dayIdx, i, visible);
+    const card = buildCard(ev, day, i, visible.length, () => {
+      state.dayIndex = dayIdx;
+      state.momentEventIndex = day.events.indexOf(ev);
+      setLevel('moment');
+    });
     canvas.appendChild(card);
   });
 
   if (junk.length) {
     const tile = document.createElement('div');
     tile.className = 'junk-tile';
-    tile.style.width = '78px'; tile.style.height = '96px';
-    tile.style.top = (canvasHeight - 120) + 'px';
-    tile.style.left = '8%';
     tile.innerHTML = `<span class="junk-icon">🗂️</span><span>вот тут всё лежит (${junk.length})</span>`;
     tile.addEventListener('click', () => openJunkModal(junk));
     canvas.appendChild(tile);
   }
 
-  if (day.hasDocs) {
-    const shadow = document.createElement('div');
-    shadow.className = 'day-thickness-shadow';
-    canvas.appendChild(shadow);
-  }
-
   STAGE.innerHTML = '';
   STAGE.appendChild(canvas);
+  STAGE.scrollLeft = 0;
   updateDayHeader(day);
-  attachXray(STAGE, 'vertical', dayIdx);
+  attachXray(STAGE, dayIdx);
 }
 
-/* ===================== RENDER: WEEK ===================== */
+/* ===================== RENDER: WEEK (один непрерывный поток по всем дням) ===================== */
 function renderWeek() {
   STAGE.className = 'stage stage--week';
-  const track = document.createElement('div');
-  track.className = 'week-track';
+  const canvas = document.createElement('div');
+  canvas.className = 'stage-canvas';
 
-  WEEK.forEach((day, idx) => {
-    const col = document.createElement('div');
-    col.className = 'week-day' + (day.hasDocs ? ' has-docs' : '');
-    const mini = document.createElement('div');
-    mini.className = 'week-day-mini';
-    const top4 = [...day.events].sort((a, b) => b.significance - a.significance).slice(0, 5);
-    top4.forEach((ev, i) => {
-      const img = document.createElement('img');
-      img.className = 'mini-photo'; img.src = ev.src;
-      const size = 38 + ev.significance * 46;
-      img.style.width = size + 'px'; img.style.height = (size * 1.2) + 'px';
-      img.style.top = (8 + Math.random() * 55) + '%';
-      img.style.left = (6 + Math.random() * 60) + '%';
-      img.style.transform = `rotate(${Math.random() * 16 - 8}deg)`;
-      img.style.zIndex = i + 1;
-      mini.appendChild(img);
+  WEEK.forEach((day, dayIdx) => {
+    const sep = document.createElement('div');
+    sep.className = 'week-sep' + (day.hasDocs ? ' has-docs' : '');
+    sep.innerHTML = `
+      <span class="week-sep-weekday">${day.date.toLocaleDateString('ru-RU', { weekday: 'short' })}</span>
+      <span class="week-sep-date">${day.date.getDate()} июня</span>
+      <span class="week-sep-mood">${day.mood}</span>
+    `;
+    canvas.appendChild(sep);
+
+    const visible = day.events.filter(e => !e.isJunk);
+    visible.forEach((ev, i) => {
+      const card = buildCard(ev, day, i, visible.length, () => {
+        state.dayIndex = dayIdx;
+        state.momentEventIndex = day.events.indexOf(ev);
+        setLevel('moment');
+      });
+      canvas.appendChild(card);
     });
-    if (day.hasDocs) {
-      const flag = document.createElement('div');
-      flag.className = 'week-day-docflag'; flag.textContent = '📎 документ';
-      mini.appendChild(flag);
-    }
-    col.innerHTML = `<div class="week-day-head">${day.date.toLocaleDateString('ru-RU', { weekday: 'long' })}</div>
-      <div class="week-day-sub">${day.date.getDate()} июня · ${day.mood}</div>`;
-    col.appendChild(mini);
-    col.addEventListener('click', () => { state.dayIndex = idx; setLevel('day'); });
-    track.appendChild(col);
   });
 
   STAGE.innerHTML = '';
-  STAGE.appendChild(track);
+  STAGE.appendChild(canvas);
+  STAGE.scrollLeft = 0;
   DAY_HEADER.style.opacity = 0;
-  attachXray(STAGE, 'horizontal', state.dayIndex);
+  attachXray(STAGE, state.dayIndex);
 }
 
-/* ===================== RENDER: MOMENT ===================== */
+/* ===================== RENDER: MOMENT (на весь экран, горизонтальный свайп) ===================== */
 function renderMoment(dayIdx, startEventIdx = 0) {
   const day = WEEK[dayIdx];
   STAGE.className = 'stage stage--moment';
@@ -218,7 +180,7 @@ function renderMoment(dayIdx, startEventIdx = 0) {
     const sections = wrap.querySelectorAll('.moment-section');
     if (sections[startEventIdx]) sections[startEventIdx].scrollIntoView();
   });
-  attachXray(STAGE, 'vertical', dayIdx);
+  attachXray(STAGE, dayIdx);
 }
 
 /* ---------- Day header ---------- */
@@ -272,16 +234,6 @@ function zoomStep(dir) {
   if (next !== state.level) setLevel(next);
 }
 
-/* tap on day card -> zoom into moment */
-function attachTapZoom(card, dayIdx, eventIdx, visibleList) {
-  card.addEventListener('click', () => {
-    if (card.classList.contains('card--pressed')) return;
-    state.dayIndex = dayIdx;
-    state.momentEventIndex = WEEK[dayIdx].events.indexOf(visibleList[eventIdx]);
-    setLevel('moment');
-  });
-}
-
 /* ---------- Long press context menu ---------- */
 const ctxMenu = document.getElementById('contextMenu');
 const ctxBackdrop = document.getElementById('contextMenuBackdrop');
@@ -330,7 +282,9 @@ const xrayTitle = document.getElementById('xrayTitle');
 const xrayDistance = document.getElementById('xrayDistance');
 const xrayEmpty = document.getElementById('xrayEmpty');
 
-function attachXray(container, axis, dayIdx) {
+/* Основная ось везде горизонтальная (листание времени/дней) ->
+   рентген всегда строго перпендикулярен: только вертикальный свайп. */
+function attachXray(container, dayIdx) {
   let startX = 0, startY = 0, dragging = false, locked = null;
 
   container.addEventListener('touchstart', (e) => {
@@ -344,19 +298,17 @@ function attachXray(container, axis, dayIdx) {
     const dx = e.touches[0].clientX - startX;
     const dy = e.touches[0].clientY - startY;
     if (!locked) {
-      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
-      locked = axis === 'vertical'
-        ? (Math.abs(dx) > Math.abs(dy) ? 'xray' : 'scroll')
-        : (Math.abs(dy) > Math.abs(dx) ? 'xray' : 'scroll');
+      if (Math.abs(dx) < 12 && Math.abs(dy) < 12) return;
+      // вертикальное движение должно заметно доминировать, иначе это листание времени
+      locked = (Math.abs(dy) > Math.abs(dx) * 1.3) ? 'xray' : 'scroll';
     }
     if (locked !== 'xray') return;
     e.preventDefault();
-    const delta = axis === 'vertical' ? dx : dy;
-    const progress = Math.min(1, Math.abs(delta) / XRAY_THRESHOLD);
-    showXrayProgress(progress, delta, axis, dayIdx);
+    const progress = Math.min(1, Math.abs(dy) / XRAY_THRESHOLD);
+    showXrayProgress(progress, dy, dayIdx);
   }, { passive: false });
 
-  container.addEventListener('touchend', (e) => {
+  container.addEventListener('touchend', () => {
     if (locked === 'xray') {
       const progress = parseFloat(xrayOverlay.dataset.progress || '0');
       if (progress >= 1) revealXrayFull(dayIdx);
@@ -366,21 +318,14 @@ function attachXray(container, axis, dayIdx) {
   });
 }
 
-function showXrayProgress(progress, delta, axis, dayIdx) {
+function showXrayProgress(progress, dy, dayIdx) {
   xrayOverlay.dataset.progress = progress;
   xrayOverlay.style.transition = 'none';
   xrayOverlay.classList.add('active');
   xrayOverlay.style.opacity = progress;
-  const dir = delta > 0 ? 0 : 100;
-  if (axis === 'vertical') {
-    xrayOverlay.style.clipPath = delta > 0
-      ? `inset(0 ${100 - progress * 100}% 0 0)`
-      : `inset(0 0 0 ${100 - progress * 100}%)`;
-  } else {
-    xrayOverlay.style.clipPath = delta > 0
-      ? `inset(${100 - progress * 100}% 0 0 0)`
-      : `inset(0 0 ${100 - progress * 100}% 0)`;
-  }
+  xrayOverlay.style.clipPath = dy < 0
+    ? `inset(${100 - progress * 100}% 0 0 0)`   // свайп вверх -> раскрытие снизу вверх
+    : `inset(0 0 ${100 - progress * 100}% 0)`;  // свайп вниз -> раскрытие сверху вниз
   fillXrayContent(dayIdx);
 }
 

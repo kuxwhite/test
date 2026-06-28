@@ -3,7 +3,7 @@ html, body {
   margin: 0; padding: 0; height: 100%;
   background: var(--background);
   color: var(--foreground);
-  font-family: -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  font-family: "Inter Tight", -apple-system, "Segoe UI", Roboto, sans-serif;
   overflow: hidden;
   touch-action: none;
 }
@@ -48,33 +48,30 @@ html, body {
   font-size: 13px; color: var(--muted-foreground); letter-spacing: .02em; margin-bottom: 2px;
 }
 .day-header-mood {
-  font-family: Georgia, "Times New Roman", serif; font-size: 26px; font-weight: 600;
+  font-family: "Inter Tight", serif; font-size: 24px; font-weight: 700;
   letter-spacing: -0.01em;
 }
 .day-header-meta {
   font-size: 12.5px; color: var(--muted-foreground); margin-top: 3px;
 }
 
-/* ---------- Stage (the scrollable canvas) ---------- */
+/* ---------- Stage: every level scrolls horizontally ---------- */
 .stage {
-  flex: 1; position: relative; overflow-y: auto; overflow-x: hidden;
+  flex: 1; position: relative; overflow-x: auto; overflow-y: hidden;
   -webkit-overflow-scrolling: touch; scrollbar-width: none;
-  touch-action: pan-y;
+  touch-action: pan-x;
 }
 .stage::-webkit-scrollbar { display: none; }
-.stage.stage--week { overflow-y: hidden; overflow-x: auto; touch-action: pan-x; }
-.stage.stage--moment {
-  overflow-y: auto; scroll-snap-type: y mandatory; touch-action: pan-y;
-}
 
 .stage-canvas {
-  position: relative; width: 100%;
+  position: relative; height: 100%; display: flex; align-items: center;
+  gap: 14px; padding: 10px 18px; width: max-content; min-width: 100%;
   transition: opacity 260ms ease;
 }
 
-/* ---------- Polaroid card (Day composition) ---------- */
+/* ---------- Polaroid card (Day / Week stream) ---------- */
 .card {
-  position: absolute; background: var(--card); border-radius: var(--radius-md);
+  position: relative; flex: none; background: var(--card); border-radius: var(--radius-md);
   box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 8px 18px -6px rgba(0,0,0,.18);
   padding: 8px 8px 22px; border: 1px solid var(--border);
   transition: transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 300ms ease;
@@ -86,77 +83,60 @@ html, body {
 }
 .card .card-label {
   position: absolute; left: 8px; bottom: 4px; font-size: 10.5px; color: var(--muted-foreground);
-  font-family: Georgia, serif;
 }
 .card.card--pressed { transform: scale(0.96) !important; box-shadow: 0 1px 2px rgba(0,0,0,.1); }
 .card.card--doc-near::after {
-  content: ""; position: absolute; right: -4px; top: 50%; transform: translateY(-50%);
-  width: 9px; height: 28px; background: var(--accent); border-radius: 6px 0 0 6px;
+  content: ""; position: absolute; top: -4px; left: 50%; transform: translateX(-50%);
+  width: 28px; height: 9px; background: var(--accent); border-radius: 0 0 6px 6px;
   opacity: .85;
-}
-
-/* document "thickness" shimmer under day clusters */
-.day-thickness-shadow {
-  position: absolute; inset: -6px -6px -10px -6px; border-radius: var(--radius-xl);
-  background: linear-gradient(180deg, transparent, var(--semantic-background) 130%);
-  opacity: .14; z-index: -1;
 }
 
 /* junk folder tile */
 .junk-tile {
-  position: absolute; background: var(--muted); border: 1px dashed var(--border);
+  flex: none; background: var(--muted); border: 1px dashed var(--border);
   border-radius: var(--radius-md); display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 4px; color: var(--muted-foreground);
-  font-size: 11px; text-align: center; padding: 6px;
+  font-size: 11px; text-align: center; padding: 6px; width: 92px; height: 86%;
   transition: transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .junk-tile .junk-icon { font-size: 20px; }
 
-/* ---------- Week view ---------- */
-.week-track {
-  display: flex; height: 100%; align-items: stretch; gap: 12px; padding: 6px 14px 24px;
-  scroll-snap-type: x proximity;
+/* ---------- Week view: day separator chip inline in the stream ---------- */
+.week-sep {
+  flex: none; width: 84px; height: 80%; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center; gap: 4px;
+  border-left: 1px dashed var(--border); border-right: 1px dashed var(--border);
+  padding: 0 14px; color: var(--muted-foreground);
 }
-.week-day {
-  flex: 0 0 78vw; max-width: 340px; scroll-snap-align: center;
-  background: var(--card); border-radius: var(--radius-xl); border: 1px solid var(--border);
-  position: relative; overflow: hidden; display: flex; flex-direction: column;
-  transition: transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.week-day.has-docs { box-shadow: 0 2px 0 var(--border), 0 6px 0 -2px var(--muted), 0 16px 28px -10px rgba(0,0,0,.25); }
-.week-day-head {
-  padding: 14px 16px 6px; font-family: Georgia, serif; font-size: 19px; font-weight: 600;
-}
-.week-day-sub { padding: 0 16px 10px; font-size: 12px; color: var(--muted-foreground); }
-.week-day-mini {
-  position: relative; flex: 1; margin: 0 10px 10px; border-radius: var(--radius-lg);
-  background: var(--muted); overflow: hidden;
-}
-.week-day-mini img.mini-photo {
-  position: absolute; border-radius: 6px; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,.18); border: 1px solid var(--background);
-}
-.week-day-docflag {
-  position: absolute; top: 10px; right: 10px; background: var(--accent); color: var(--accent-foreground);
-  font-size: 10.5px; padding: 3px 8px; border-radius: var(--radius-full);
-}
+.week-sep .week-sep-weekday { font-weight: 700; color: var(--foreground); font-size: 14px; text-transform: capitalize; }
+.week-sep .week-sep-date { font-size: 11px; }
+.week-sep .week-sep-mood { font-size: 11px; margin-top: 4px; }
+.week-sep.has-docs { background: var(--semantic-background); opacity: .92; border-color: var(--semantic-border); }
+.week-sep.has-docs .week-sep-weekday,
+.week-sep.has-docs .week-sep-date,
+.week-sep.has-docs .week-sep-mood { color: var(--semantic-foreground); }
 
-/* ---------- Moment view ---------- */
+/* ---------- Moment view: full-bleed, horizontal swipe ---------- */
+.stage.stage--moment .stage-canvas {
+  padding: 0; gap: 0; scroll-snap-type: x mandatory; height: 100%;
+}
 .moment-section {
-  height: 100%; width: 100%; scroll-snap-align: start; scroll-snap-stop: always;
-  display: flex; align-items: center; justify-content: center; position: relative; padding: 0 24px;
+  flex: 0 0 100vw; width: 100vw; height: 100%; scroll-snap-align: start; scroll-snap-stop: always;
+  display: flex; align-items: center; justify-content: center; position: relative;
 }
 .moment-card {
-  width: 100%; max-width: 380px; background: var(--card); border-radius: var(--radius-lg);
-  border: 1px solid var(--border); padding: 10px 10px 30px;
-  box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 18px 40px -12px rgba(0,0,0,.28);
+  width: 100%; height: 100%; position: relative; background: var(--card); overflow: hidden;
 }
-.moment-card img { width: 100%; aspect-ratio: 4/5; object-fit: cover; border-radius: 5px; display: block; }
-.moment-card .moment-time { position: absolute; left: 28px; bottom: 14px; font-family: Georgia, serif; font-size: 13px; color: var(--muted-foreground); }
+.moment-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.moment-card .moment-time {
+  position: absolute; left: 18px; bottom: 18px; font-size: 13px; font-weight: 600;
+  color: #fff; text-shadow: 0 1px 6px rgba(0,0,0,.5);
+}
 .moment-edge-peek {
-  position: absolute; right: 0; top: 50%; transform: translateY(-50%) translateX(70%) rotate(-6deg);
-  width: 64px; height: 84px; background: var(--card); border: 1px solid var(--border);
-  border-radius: var(--radius-sm); box-shadow: -4px 4px 14px rgba(0,0,0,.15);
-  display: flex; align-items: center; justify-content: center; font-size: 22px; opacity: .9;
+  position: absolute; top: 16px; left: 50%; transform: translateX(-50%) translateY(-70%) rotate(-4deg);
+  width: 64px; height: 50px; background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); box-shadow: 0 4px 14px rgba(0,0,0,.25);
+  display: flex; align-items: center; justify-content: center; font-size: 20px; opacity: .92;
 }
 
 /* ---------- X-ray overlay ---------- */
@@ -174,7 +154,7 @@ html, body {
   box-shadow: 0 20px 50px rgba(0,0,0,.35);
 }
 .xray-icon { font-size: 40px; margin-bottom: 10px; }
-.xray-title { font-family: Georgia, serif; font-size: 20px; font-weight: 600; }
+.xray-title { font-size: 20px; font-weight: 700; }
 .xray-distance { margin-top: 6px; font-size: 13px; color: var(--muted-foreground); }
 .xray-empty { display: none; font-size: 14px; color: var(--muted-foreground); }
 .xray-progress {
@@ -236,5 +216,5 @@ html, body {
 .junk-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius-sm); }
 
 @media (min-width: 600px) {
-  .stage { max-width: 480px; margin: 0 auto; }
+  #app { max-width: 480px; margin: 0 auto; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
 }
