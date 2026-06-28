@@ -19,7 +19,8 @@ const JUNK_THRESHOLD = 0.22;
 const XRAY_THRESHOLD = 110; // px
 const SPRING = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
 
-let state = { level: 'day', dayIndex: 2, momentEventIndex: 0 };
+const dayParam = parseInt(new URLSearchParams(window.location.search).get('day'), 10);
+let state = { level: 'day', dayIndex: Number.isInteger(dayParam) ? dayParam : 2, momentEventIndex: 0 };
 
 /* ---------- Mock data ---------- */
 function seedPhoto(seed, w = 600, h = 750) {

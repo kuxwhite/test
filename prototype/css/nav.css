@@ -1,0 +1,15 @@
+/* ---------- Shared bottom navigation ---------- */
+.bottom-nav {
+  position: relative; z-index: 30; display: flex; align-items: center;
+  justify-content: space-around; flex: none;
+  padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+  background: var(--background); border-top: 1px solid var(--border);
+}
+.nav-item {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  font-size: 11px; color: var(--muted-foreground); text-decoration: none;
+  padding: 4px 10px; border-radius: var(--radius-md); transition: color .2s ease;
+}
+.nav-item .nav-icon { font-size: 19px; line-height: 1; }
+.nav-item.active { color: var(--foreground); font-weight: 600; }
+.nav-item--disabled { opacity: .4; pointer-events: none; }

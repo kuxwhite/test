@@ -164,7 +164,7 @@ html, body {
 
 /* ---------- Hint pill (gesture onboarding) ---------- */
 .hint-pill {
-  position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%);
+  position: fixed; bottom: calc(70px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
   background: var(--primary); color: var(--primary-foreground); font-size: 12.5px;
   padding: 9px 16px; border-radius: var(--radius-full); z-index: 25;
   opacity: 0; transition: opacity 400ms ease, transform 400ms ease; pointer-events: none;
