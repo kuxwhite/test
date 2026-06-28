@@ -1,0 +1,90 @@
+:root,
+[data-theme="light"] {
+  --background: #FFFFFF;
+  --foreground: #0A0A0A;
+  --card: #FFFFFF;
+  --card-foreground: #0A0A0A;
+  --popover: #FFFFFF;
+  --popover-foreground: #0A0A0A;
+  --primary: #171717;
+  --primary-foreground: #FAFAFA;
+  --secondary: #F5F5F5;
+  --secondary-foreground: #0A0A0A;
+  --muted: #F5F5F5;
+  --muted-foreground: #737373;
+  --accent: #F5F5F5;
+  --accent-foreground: #171717;
+  --destructive: #DC2626;
+  --border: #E5E5E5;
+  --input: #E5E5E5;
+  --ring: #737373;
+  --chart-1: #5EB1EF;
+  --chart-2: #0090FF;
+  --chart-3: #0588F0;
+  --chart-4: #0D74CE;
+  --chart-5: #113264;
+  --sidebar: #FAFAFA;
+  --sidebar-foreground: #0A0A0A;
+  --sidebar-primary: #171717;
+  --sidebar-primary-foreground: #FAFAFA;
+  --sidebar-accent: #F5F5F5;
+  --sidebar-accent-foreground: #171717;
+  --sidebar-border: #E5E5E5;
+  --sidebar-ring: #737373;
+  --overlay: rgba(0, 0, 0, 0.3);
+  --semantic-background: #696867;
+  --semantic-border: #898887;
+  --semantic-foreground: #FFFFFF;
+
+  --radius-none: 0px;
+  --radius-xs: 2px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --radius-2xl: 18px;
+  --radius-3xl: 22px;
+  --radius-4xl: 26px;
+  --radius-full: 9999px;
+
+  --stroke-width: 2px;
+  --border-width: 1px;
+}
+
+[data-theme="dark"] {
+  --background: #0A0A0A;
+  --foreground: #FAFAFA;
+  --card: #171717;
+  --card-foreground: #FAFAFA;
+  --popover: #262626;
+  --popover-foreground: #FAFAFA;
+  --primary: #E5E5E5;
+  --primary-foreground: #171717;
+  --secondary: #262626;
+  --secondary-foreground: #FAFAFA;
+  --muted: #262626;
+  --muted-foreground: #A3A3A3;
+  --accent: #404040;
+  --accent-foreground: #FAFAFA;
+  --destructive: #F87171;
+  --border: #404040;
+  --input: #171717;
+  --ring: #737373;
+  --chart-1: #5EB1EF;
+  --chart-2: #0090FF;
+  --chart-3: #0588F0;
+  --chart-4: #0D74CE;
+  --chart-5: #113264;
+  --sidebar: #171717;
+  --sidebar-foreground: #FAFAFA;
+  --sidebar-primary: #0588F0;
+  --sidebar-primary-foreground: #FAFAFA;
+  --sidebar-accent: #262626;
+  --sidebar-accent-foreground: #FAFAFA;
+  --sidebar-border: #404040;
+  --sidebar-ring: #737373;
+  --overlay: rgba(0, 0, 0, 0.3);
+  --semantic-background: #272625;
+  --semantic-border: #535151;
+  --semantic-foreground: #FFFFFF;
+}
