@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Поток — Облако будущего</title>
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div id="app">
+
+  <header class="topbar">
+    <button class="icon-btn" id="backBtn" aria-label="Назад">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 5L8 12L15 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="zoom-switch" id="zoomSwitch">
+      <button class="zoom-tab" data-level="moment">Момент</button>
+      <button class="zoom-tab" data-level="day">День</button>
+      <button class="zoom-tab" data-level="week">Неделя</button>
+      <span class="zoom-thumb" id="zoomThumb"></span>
+    </div>
+    <button class="icon-btn" id="searchBtn" aria-label="Поиск">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+  </header>
+
+  <div class="day-header" id="dayHeader">
+    <div class="day-header-date" id="dayHeaderDate">Сегодня</div>
+    <div class="day-header-mood" id="dayHeaderMood">—</div>
+    <div class="day-header-meta" id="dayHeaderMeta"></div>
+  </div>
+
+  <main id="stage" class="stage stage--day"></main>
+
+  <div class="hint-pill" id="hintPill">Свайп вбок — рентген</div>
+
+</div>
+
+<!-- X-ray overlay -->
+<div id="xrayOverlay" class="xray-overlay">
+  <div class="xray-card" id="xrayCard">
+    <div class="xray-icon">📄</div>
+    <div class="xray-title" id="xrayTitle">Документ</div>
+    <div class="xray-distance" id="xrayDistance"></div>
+    <div class="xray-empty" id="xrayEmpty">Здесь пока пусто — документов рядом не нашлось.</div>
+  </div>
+</div>
+<div class="xray-progress" id="xrayProgress"></div>
+
+<!-- Long-press context menu -->
+<div id="contextMenuBackdrop" class="context-backdrop"></div>
+<div id="contextMenu" class="context-menu">
+  <button data-action="share">Поделиться</button>
+  <button data-action="set">Добавить в набор</button>
+  <button data-action="move">Переместить категорию</button>
+  <button data-action="delete" class="danger">Удалить</button>
+  <button data-action="cancel" class="cancel">Отмена</button>
+</div>
+
+<!-- Junk folder modal -->
+<div id="junkModalBackdrop" class="junk-backdrop"></div>
+<div id="junkModal" class="junk-modal">
+  <div class="junk-modal-header">
+    <span>Вот тут всё лежит</span>
+    <button id="junkRestoreBtn">Положить всё обратно</button>
+  </div>
+  <div class="junk-grid" id="junkGrid"></div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

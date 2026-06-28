@@ -1,0 +1,240 @@
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  margin: 0; padding: 0; height: 100%;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  overflow: hidden;
+  touch-action: none;
+}
+#app { position: fixed; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ---------- Topbar ---------- */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: calc(env(safe-area-inset-top, 0px) + 10px) 14px 10px;
+  position: relative; z-index: 30;
+  background: linear-gradient(to bottom, var(--background) 70%, transparent);
+}
+.icon-btn {
+  width: 36px; height: 36px; border-radius: var(--radius-full);
+  display: flex; align-items: center; justify-content: center;
+  background: var(--secondary); color: var(--foreground);
+  border: none; flex: none;
+}
+.zoom-switch {
+  position: relative; display: flex; background: var(--secondary);
+  border-radius: var(--radius-full); padding: 3px; gap: 2px;
+}
+.zoom-tab {
+  position: relative; z-index: 2; border: none; background: transparent;
+  font-size: 12.5px; font-weight: 600; padding: 7px 13px; border-radius: var(--radius-full);
+  color: var(--muted-foreground); transition: color .25s ease;
+}
+.zoom-tab.active { color: var(--primary-foreground); }
+.zoom-thumb {
+  position: absolute; top: 3px; left: 3px; height: calc(100% - 6px);
+  width: 33.33%; background: var(--primary); border-radius: var(--radius-full);
+  z-index: 1; transition: transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---------- Day header (shown between days / at day entry) ---------- */
+.day-header {
+  text-align: center; padding: 2px 16px 14px; position: relative; z-index: 20;
+  background: var(--background);
+  transition: opacity 320ms ease, transform 320ms ease;
+}
+.day-header-date {
+  font-size: 13px; color: var(--muted-foreground); letter-spacing: .02em; margin-bottom: 2px;
+}
+.day-header-mood {
+  font-family: Georgia, "Times New Roman", serif; font-size: 26px; font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.day-header-meta {
+  font-size: 12.5px; color: var(--muted-foreground); margin-top: 3px;
+}
+
+/* ---------- Stage (the scrollable canvas) ---------- */
+.stage {
+  flex: 1; position: relative; overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  touch-action: pan-y;
+}
+.stage::-webkit-scrollbar { display: none; }
+.stage.stage--week { overflow-y: hidden; overflow-x: auto; touch-action: pan-x; }
+.stage.stage--moment {
+  overflow-y: auto; scroll-snap-type: y mandatory; touch-action: pan-y;
+}
+
+.stage-canvas {
+  position: relative; width: 100%;
+  transition: opacity 260ms ease;
+}
+
+/* ---------- Polaroid card (Day composition) ---------- */
+.card {
+  position: absolute; background: var(--card); border-radius: var(--radius-md);
+  box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 8px 18px -6px rgba(0,0,0,.18);
+  padding: 8px 8px 22px; border: 1px solid var(--border);
+  transition: transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 300ms ease;
+  will-change: transform;
+}
+.card img {
+  width: 100%; height: 100%; object-fit: cover; border-radius: 3px; display: block;
+  pointer-events: none; -webkit-user-drag: none;
+}
+.card .card-label {
+  position: absolute; left: 8px; bottom: 4px; font-size: 10.5px; color: var(--muted-foreground);
+  font-family: Georgia, serif;
+}
+.card.card--pressed { transform: scale(0.96) !important; box-shadow: 0 1px 2px rgba(0,0,0,.1); }
+.card.card--doc-near::after {
+  content: ""; position: absolute; right: -4px; top: 50%; transform: translateY(-50%);
+  width: 9px; height: 28px; background: var(--accent); border-radius: 6px 0 0 6px;
+  opacity: .85;
+}
+
+/* document "thickness" shimmer under day clusters */
+.day-thickness-shadow {
+  position: absolute; inset: -6px -6px -10px -6px; border-radius: var(--radius-xl);
+  background: linear-gradient(180deg, transparent, var(--semantic-background) 130%);
+  opacity: .14; z-index: -1;
+}
+
+/* junk folder tile */
+.junk-tile {
+  position: absolute; background: var(--muted); border: 1px dashed var(--border);
+  border-radius: var(--radius-md); display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 4px; color: var(--muted-foreground);
+  font-size: 11px; text-align: center; padding: 6px;
+  transition: transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.junk-tile .junk-icon { font-size: 20px; }
+
+/* ---------- Week view ---------- */
+.week-track {
+  display: flex; height: 100%; align-items: stretch; gap: 12px; padding: 6px 14px 24px;
+  scroll-snap-type: x proximity;
+}
+.week-day {
+  flex: 0 0 78vw; max-width: 340px; scroll-snap-align: center;
+  background: var(--card); border-radius: var(--radius-xl); border: 1px solid var(--border);
+  position: relative; overflow: hidden; display: flex; flex-direction: column;
+  transition: transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.week-day.has-docs { box-shadow: 0 2px 0 var(--border), 0 6px 0 -2px var(--muted), 0 16px 28px -10px rgba(0,0,0,.25); }
+.week-day-head {
+  padding: 14px 16px 6px; font-family: Georgia, serif; font-size: 19px; font-weight: 600;
+}
+.week-day-sub { padding: 0 16px 10px; font-size: 12px; color: var(--muted-foreground); }
+.week-day-mini {
+  position: relative; flex: 1; margin: 0 10px 10px; border-radius: var(--radius-lg);
+  background: var(--muted); overflow: hidden;
+}
+.week-day-mini img.mini-photo {
+  position: absolute; border-radius: 6px; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,.18); border: 1px solid var(--background);
+}
+.week-day-docflag {
+  position: absolute; top: 10px; right: 10px; background: var(--accent); color: var(--accent-foreground);
+  font-size: 10.5px; padding: 3px 8px; border-radius: var(--radius-full);
+}
+
+/* ---------- Moment view ---------- */
+.moment-section {
+  height: 100%; width: 100%; scroll-snap-align: start; scroll-snap-stop: always;
+  display: flex; align-items: center; justify-content: center; position: relative; padding: 0 24px;
+}
+.moment-card {
+  width: 100%; max-width: 380px; background: var(--card); border-radius: var(--radius-lg);
+  border: 1px solid var(--border); padding: 10px 10px 30px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 18px 40px -12px rgba(0,0,0,.28);
+}
+.moment-card img { width: 100%; aspect-ratio: 4/5; object-fit: cover; border-radius: 5px; display: block; }
+.moment-card .moment-time { position: absolute; left: 28px; bottom: 14px; font-family: Georgia, serif; font-size: 13px; color: var(--muted-foreground); }
+.moment-edge-peek {
+  position: absolute; right: 0; top: 50%; transform: translateY(-50%) translateX(70%) rotate(-6deg);
+  width: 64px; height: 84px; background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); box-shadow: -4px 4px 14px rgba(0,0,0,.15);
+  display: flex; align-items: center; justify-content: center; font-size: 22px; opacity: .9;
+}
+
+/* ---------- X-ray overlay ---------- */
+.xray-overlay {
+  position: fixed; inset: 0; z-index: 60; pointer-events: none;
+  background: var(--semantic-background);
+  display: flex; align-items: center; justify-content: center;
+  clip-path: inset(0 100% 0 0);
+  opacity: 0;
+}
+.xray-overlay.active { pointer-events: auto; }
+.xray-card {
+  width: 82%; max-width: 360px; background: var(--card); border-radius: var(--radius-xl);
+  padding: 36px 26px; text-align: center; color: var(--card-foreground);
+  box-shadow: 0 20px 50px rgba(0,0,0,.35);
+}
+.xray-icon { font-size: 40px; margin-bottom: 10px; }
+.xray-title { font-family: Georgia, serif; font-size: 20px; font-weight: 600; }
+.xray-distance { margin-top: 6px; font-size: 13px; color: var(--muted-foreground); }
+.xray-empty { display: none; font-size: 14px; color: var(--muted-foreground); }
+.xray-progress {
+  position: fixed; top: 0; bottom: 0; width: 4px; background: var(--ring);
+  z-index: 61; opacity: 0; border-radius: 4px;
+}
+
+/* ---------- Hint pill (gesture onboarding) ---------- */
+.hint-pill {
+  position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%);
+  background: var(--primary); color: var(--primary-foreground); font-size: 12.5px;
+  padding: 9px 16px; border-radius: var(--radius-full); z-index: 25;
+  opacity: 0; transition: opacity 400ms ease, transform 400ms ease; pointer-events: none;
+}
+.hint-pill.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ---------- Context menu (long-press) ---------- */
+.context-backdrop {
+  position: fixed; inset: 0; z-index: 70; background: transparent; display: none;
+}
+.context-backdrop.show { display: block; }
+.context-menu {
+  position: fixed; z-index: 71; background: var(--popover); border-radius: var(--radius-lg);
+  overflow: hidden; min-width: 210px; box-shadow: 0 12px 30px rgba(0,0,0,.3);
+  transform: scale(.85); opacity: 0; pointer-events: none;
+  transition: transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 180ms ease;
+}
+.context-menu.show { transform: scale(1); opacity: 1; pointer-events: auto; }
+.context-menu button {
+  display: block; width: 100%; text-align: left; padding: 13px 16px; border: none;
+  background: transparent; font-size: 15px; color: var(--popover-foreground);
+  border-bottom: 1px solid var(--border);
+}
+.context-menu button:last-child { border-bottom: none; }
+.context-menu button.danger { color: var(--destructive); }
+.context-menu button.cancel { text-align: center; font-weight: 600; color: var(--muted-foreground); }
+
+/* ---------- Junk modal ---------- */
+.junk-backdrop {
+  position: fixed; inset: 0; z-index: 80; background: rgba(0,0,0,.4); display: none; opacity: 0;
+  transition: opacity 260ms ease;
+}
+.junk-backdrop.show { display: block; opacity: 1; }
+.junk-modal {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 81; background: var(--card);
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0; padding: 18px 16px calc(20px + env(safe-area-inset-bottom));
+  transform: translateY(100%); transition: transform 360ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  max-height: 70vh; display: flex; flex-direction: column;
+}
+.junk-modal.show { transform: translateY(0); }
+.junk-modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; font-weight: 600; }
+.junk-modal-header button {
+  background: var(--secondary); border: none; color: var(--secondary-foreground);
+  font-size: 12.5px; padding: 8px 12px; border-radius: var(--radius-full);
+}
+.junk-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; overflow-y: auto;
+}
+.junk-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius-sm); }
+
+@media (min-width: 600px) {
+  .stage { max-width: 480px; margin: 0 auto; }
+}
