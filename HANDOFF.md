@@ -3,12 +3,25 @@
 ## 0. Промпт для Claude Code (вставьте первым сообщением)
 
 ```
-Прочитай HANDOFF.md целиком и работай по плану из раздела 6.
+Прочитай HANDOFF.md целиком и работай по плану из разделов 6 и 8.
 
-Это React + Vite прототип экрана Авиасейлс по Figma (fileKey 6zX9IefdtemGiLH7nfVJqa,
-узлы 71:1738 — экран, 89:1029 — новая идея шапки). Экран уже свёрстан 1:1, npm run dev.
+Это React + Vite прототип экрана Авиасейлс по Figma (fileKey 6zX9IefdtemGiLH7nfVJqa).
+Источник правды — секция Figma «Handoff → code» (узел 110:755): два экрана рядом,
+собранные из компонентов, токенов и стилей:
+  • Flights — узел 106:283
+  • Hotels  — узел 110:569
+Токены и компоненты со всеми состояниями — страница «Components» (узел 103:1127),
+лист состояний — узел 104:1200. Токены уже выгружены в src/tokens.css.
 
-Задача — шапка «вид из окна»: на вкладке Flights в шапке иллюминатор
+0) Пересобери экран из компонентов (раздел 8): Search Tab, Search Field, Route Fields,
+   Icon Field, Hotel Fields, Search Button, Shortcut Tile, Plan Card, Glass Button.
+   Каждый — отдельный React-компонент со всеми состояниями из Figma, стили только
+   через переменные из src/tokens.css, без захардкоженных цветов и отступов.
+   Табы реально переключают экран: Flights → Route Fields + «Search» + плитки
+   Shortcut + секция «Plans for autumn»; Hotels → Hotel Fields + «Search hotels»,
+   без плиток, секция карточек без заголовка (как на 110:569). Переход между
+   наборами полей плавный (высота карточки анимируется, поля — fade/slide).
+Затем шапка «вид из окна»: на вкладке Flights иллюминатор
 (public/scenes/flights.png), на вкладке Hotels — окно отеля (public/scenes/hotels.png).
 1) Сделай компонент <WindowScene tab> вместо временного <img className="hero-still">
    в src/App.jsx: смена вкладки — плавный морф проёма из одного окна в другое
@@ -19,7 +32,7 @@
 3) Задеплой на HTTPS-ссылку, которую я открою на iPhone (раздел 7), и дай мне ссылку.
 
 После каждого шага показывай скриншот в вьюпорте 402×874 и сравнивай с
-reference/figma-89-1029.png. Не меняй вёрстку экрана ниже шапки и сами картинки.
+скриншотами узлов 106:283 (Flights) и 110:569 (Hotels) из Figma. Не меняй сами картинки сцен.
 ```
 
 ---
@@ -102,3 +115,25 @@ reference/figma-89-1029.png. Не меняй вёрстку экрана ниж�
 - Туннель: `npx cloudflared tunnel --url http://localhost:5173`.
 
 Для «как приложение»: в Safari «На экран „Домой“». Мета `apple-mobile-web-app-capable` и `viewport-fit=cover` уже стоят, статус-бар ляжет поверх шапки как в макете.
+
+## 8. Дизайн-система (Figma → код)
+
+Источник: страница **Components** (`103:1127`); экраны на компонентах в секции `110:755` (Flights `106:283`, Hotels `110:569`). Переменные Figma: коллекции `Primitives`, `Color` (режим Light), `Dimension`. У каждой переменной задан WEB code syntax, совпадающий с именами в `src/tokens.css`. Если в Figma что-то поменяется, сверяйся через `get_variable_defs`.
+
+**Текстовые стили:** `Heading/Section`, `Tab/Label`, `Field/Value`, `Field/Label`, `Button/Label`, `Shortcut/Label`, `Card/Title`, `Card/Meta` (SF Pro Rounded, letter-spacing −1%), в CSS это `--text-*` + `--tracking`.
+
+**Эффекты:** `Glow/Button`, `Glow/Section`, `Glow/Hero` (внутреннее свечение), в CSS `--glow-*`.
+
+| Компонент (Figma id) | Варианты | Свойства | Поведение в коде |
+|---|---|---|---|
+| Search Tab `103:1148` | Selected True/False × State Default/Pressed | Label, Icon (swap) | выбранный: пилюля `--color-bg-tab-selected`; невыбранный: opacity .6; нажатие: пилюля ярче + scale .96, пружина |
+| Search Field `103:1162` | Filled / Placeholder / Focused | Label, Value, Placeholder | фокус: подпись `--color-text-accent`, мигающая каретка 2×22 |
+| Route Fields `103:1163` | — | — | From (Filled) + перемычка + To (Placeholder) |
+| Icon Field `110:493` | Placeholder / Filled / Focused | Text, Icon (swap) | однострочное поле с иконкой 24 px слева; фокус: иконка и каретка `--color-text-accent` |
+| Hotel Fields `110:494` | — | — | Destination (Placeholder) + Dates (Placeholder) + Guests (Filled «2 adults») с перемычками |
+| Search Button `103:1181` | Default / Pressed / Loading / Disabled | Label | `--gradient-cta` + `--glow-button`; нажатие: 8% тёмный слой + scale .97; загрузка: спиннер вместо текста; неактивна: opacity .5 |
+| Shortcut Tile `104:1152` | Default / Pressed | Label, Icon (swap) | иконка 48 px вылезает за верх плитки на 16 px; нажатие: `--color-bg-surface-pressed` + scale .95 |
+| Plan Card `104:1168` | Default / Pressed | Title, City, Price | горизонтальный скролл со scroll-snap; нажатие: 12% тёмный слой на фото + scale .97 |
+| Glass Button `104:1199` | Avatar / Favorite / Favorite Active | — | плавающие кнопки Liquid Glass внизу экрана; сердце Line → Solid `--color-icon-favorite` с пружинным «поп» |
+
+Иконки плиток: компоненты `Shortcut icon / A / Fire | Globe | Sparkles | Navigation` (Page 1). Экспортируй их SVG через Figma (`get_design_context` или `exportAsync`), не перерисовывай.

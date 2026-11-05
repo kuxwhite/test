@@ -1,113 +1,151 @@
-import { useState } from 'react'
+import { AnimatePresence, MotionConfig, motion } from 'motion/react'
+import { useLayoutEffect, useRef, useState } from 'react'
+import WindowScene from './WindowScene.jsx'
+import SearchTab from './components/SearchTab.jsx'
+import RouteFields from './components/RouteFields.jsx'
+import HotelFields from './components/HotelFields.jsx'
+import SearchButton from './components/SearchButton.jsx'
+import ShortcutTile from './components/ShortcutTile.jsx'
+import PlanCard from './components/PlanCard.jsx'
+import GlassButton from './components/GlassButton.jsx'
+import {
+  BedIcon, FireSticker, GlobeSticker, NavigationIcon, NavigationSticker, PlaneIcon, SparklesSticker,
+} from './components/icons.jsx'
 import avatar from './assets/img/avatar.png'
-import fire from './assets/img/fire.png'
-import globe from './assets/img/globe.png'
-import sparkles from './assets/img/sparkles.png'
-import arrow from './assets/img/arrow.png'
 import whales from './assets/img/whales.jpg'
 import sunrise from './assets/img/sunrise.jpg'
 import kasbah from './assets/img/kasbah.jpg'
 import mountains from './assets/img/mountains.jpg'
-import heartIcon from './assets/icons/heart.svg'
-import planeIcon from './assets/icons/plane.svg'
-import bedIcon from './assets/icons/bed.svg'
-import treeIcon from './assets/icons/tree.svg'
-import connector from './assets/icons/connector.svg'
-import WindowScene from './WindowScene.jsx'
+import hotelHouse from './assets/img/hotel-house.jpg'
+import hotelMeadow from './assets/img/hotel-meadow.jpg'
 
-// Figma: Концепты / Screen 71:1738
+// Figma: Handoff → code (110:755) — Flights 106:283, Hotels 110:569.
 const TABS = [
-  { id: 'flights', label: 'Flights', icon: planeIcon },
-  { id: 'hotels', label: 'Hotels', icon: bedIcon },
-  { id: 'impression', label: 'Impression', icon: treeIcon },
+  { id: 'flights', label: 'Flights', icon: <PlaneIcon /> },
+  { id: 'hotels', label: 'Hotels', icon: <BedIcon /> },
+  { id: 'tours', label: 'Tours', icon: <NavigationIcon /> },
 ]
 const SHORTCUTS = [
-  { label: ['Hot', 'tickets'], img: fire },
-  { label: ['Surprise', 'me'], img: globe },
-  { label: ['Smart', 'search'], img: sparkles },
-  { label: ['Custom', 'route'], img: arrow },
+  { label: 'Hot\ntickets', icon: <FireSticker /> },
+  { label: 'Surprise me', icon: <GlobeSticker /> },
+  { label: 'Smart search', icon: <SparklesSticker /> },
+  { label: 'Custom route', icon: <NavigationSticker /> },
 ]
-const PLANS = [
-  { title: ['Watch', 'the whales'], img: whales },
-  { title: ['Catch a sunrise', 'in the sky'], img: sunrise },
-  { title: ['Take in', 'the wild nature'], img: kasbah },
-  { title: ['Hike up', 'to Kazbegi'], img: mountains },
+const PLAN_TEXT = [
+  { title: 'Watch\nthe whales', city: 'Murmansk', price: 'from 5,389 ₽' },
+  { title: 'Catch a sunrise\nin the sky', city: 'Murmansk', price: 'from 5,389 ₽' },
+  { title: 'Take in\nthe wild nature', city: 'Murmansk', price: 'from 5,389 ₽' },
+  { title: 'Hike up\nto Kazbegi', city: 'Murmansk', price: 'from 5,389 ₽' },
 ]
+const PLAN_IMAGES = {
+  flights: [whales, sunrise, kasbah, mountains],
+  hotels: [hotelHouse, hotelMeadow, kasbah, mountains],
+}
+
+// Tours has no screen in Figma yet: it reuses the Flights layout.
+const layoutOf = (tab) => (tab === 'hotels' ? 'hotels' : 'flights')
+const EASE = [0.32, 0.72, 0, 1]
+const swap = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.32, ease: EASE, delay: 0.06 } },
+  exit: { opacity: 0, y: -8, transition: { duration: 0.16, ease: 'easeIn' } },
+}
+
+// Animates the card height to whatever the current field set needs.
+function AutoHeight({ children }) {
+  const inner = useRef(null)
+  const [height, setHeight] = useState('auto')
+  useLayoutEffect(() => {
+    const el = inner.current
+    const ro = new ResizeObserver(() => setHeight(el.offsetHeight))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  return (
+    <motion.div className="search-card__body" initial={false} animate={{ height }}
+                transition={{ duration: 0.45, ease: EASE }} style={{ overflow: 'clip' }}>
+      <div ref={inner}>{children}</div>
+    </motion.div>
+  )
+}
 
 export default function App() {
   const [tab, setTab] = useState('flights')
-  const [from, setFrom] = useState('Perm')
-  const [to, setTo] = useState('Vietnam')
-  const [liked, setLiked] = useState(false)
+  const [route, setRoute] = useState({ from: 'Perm', to: '' })
+  const [hotel, setHotel] = useState({ destination: '', dates: '', guests: '2 adults' })
+  const [loading, setLoading] = useState(false)
+  const [liked, setLiked] = useState(true) // both Figma screens show Favorite Active
+  const layout = layoutOf(tab)
+
+  const submit = (e) => {
+    e.preventDefault()
+    if (loading) return
+    setLoading(true)
+    setTimeout(() => setLoading(false), 1400)
+  }
 
   return (
-    <main className="screen">
-      <header className="hero">
-        <WindowScene tab={tab} />
-        <div className="hero-haze" aria-hidden />
-        <div className="hero-fade" aria-hidden />
-        <div className="profile">
-          <div className="me">
-            <span className="avatar"><img src={avatar} alt="" /></span>
-            <span className="me-name">Kirill</span>
-          </div>
-          <button className={'glass-btn' + (liked ? ' on' : '')} aria-label="Favourites" aria-pressed={liked}
-                  onClick={() => setLiked(v => !v)}>
-            <img src={heartIcon} alt="" width="24" height="24" />
-          </button>
-        </div>
-      </header>
+    <MotionConfig reducedMotion="user">
+      <main className="screen">
+        <header className="hero">
+          <WindowScene tab={tab} />
+          <div className="hero-fade" aria-hidden />
+        </header>
 
-      <div className="content">
-        <section className="search" aria-label="Flight search">
-          <div className="tabs" role="tablist">
-            {TABS.map(t => (
-              <button key={t.id} role="tab" aria-selected={tab === t.id}
-                      className={'tab' + (tab === t.id ? ' active' : '')} onClick={() => setTab(t.id)}>
-                <img src={t.icon} alt="" width="24" height="24" />
-                <span>{t.label}</span>
-              </button>
-            ))}
-          </div>
-          <form className="fields" onSubmit={e => e.preventDefault()}>
-            <label className="field">
-              <span className="field-label">From</span>
-              <input value={from} onChange={e => setFrom(e.target.value)} autoComplete="off" />
-            </label>
-            <img className="connector" src={connector} alt="" width="48.5" height="3" />
-            <label className="field">
-              <span className="field-label">To</span>
-              <input value={to} onChange={e => setTo(e.target.value)} autoComplete="off" />
-            </label>
-            <button className="search-btn" type="submit">Search</button>
-          </form>
-        </section>
+        <div className="content">
+          <section className="search-card" aria-label="Search">
+            <div className="search-tabs" role="tablist" aria-label="Search type">
+              {TABS.map((t) => (
+                <SearchTab key={t.id} label={t.label} icon={t.icon} selected={tab === t.id}
+                           controls="search-panel" onSelect={() => setTab(t.id)} />
+              ))}
+            </div>
 
-        <nav className="shortcuts" aria-label="Shortcuts">
-          {SHORTCUTS.map(s => (
-            <button key={s.label.join(' ')} className="shortcut">
-              <img src={s.img} alt="" width="48" height="48" />
-              <span>{s.label[0]}<br />{s.label[1]}</span>
-            </button>
-          ))}
-        </nav>
+            <AutoHeight>
+              <AnimatePresence mode="popLayout" initial={false}>
+                <motion.form key={layout} id="search-panel" role="tabpanel" className="search-card__form"
+                             onSubmit={submit} {...swap}>
+                  {layout === 'hotels' ? (
+                    <HotelFields {...hotel}
+                                 onDestination={(v) => setHotel((h) => ({ ...h, destination: v }))}
+                                 onDates={(v) => setHotel((h) => ({ ...h, dates: v }))}
+                                 onGuests={(v) => setHotel((h) => ({ ...h, guests: v }))} />
+                  ) : (
+                    <RouteFields {...route}
+                                 onFrom={(v) => setRoute((r) => ({ ...r, from: v }))}
+                                 onTo={(v) => setRoute((r) => ({ ...r, to: v }))} />
+                  )}
+                  <SearchButton label={layout === 'hotels' ? 'Search hotels' : tab === 'tours' ? 'Search tours' : 'Search'}
+                                loading={loading} />
+                </motion.form>
+              </AnimatePresence>
+            </AutoHeight>
+          </section>
 
-        <section className="plans">
-          <h2>Plans for autumn</h2>
-          <div className="plans-row">
-            {PLANS.map(p => (
-              <article key={p.title.join(' ')} className="plan">
-                <img src={p.img} alt="" width="156" height="156" />
-                <div className="plan-info">
-                  <p className="plan-title">{p.title[0]}<br />{p.title[1]}</p>
-                  <p>Murmansk</p>
-                  <p>from 5,389 ₽</p>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div key={layout} className={'below below--' + layout} {...swap}>
+              {layout === 'flights' && (
+                <nav className="shortcuts" aria-label="Shortcuts">
+                  {SHORTCUTS.map((s) => <ShortcutTile key={s.label} icon={s.icon} label={s.label} />)}
+                </nav>
+              )}
+              <section className="plans" aria-label="Plans for autumn">
+                {layout === 'flights' && <h2 className="plans__title">Plans for autumn</h2>}
+                <div className="plans__row">
+                  {PLAN_TEXT.map((p, i) => (
+                    <PlanCard key={p.title} image={PLAN_IMAGES[layout][i]} {...p} />
+                  ))}
                 </div>
-              </article>
-            ))}
-          </div>
-        </section>
-      </div>
-    </main>
+              </section>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        <nav className="tab-bar" aria-label="Account">
+          <GlassButton content="avatar" avatar={avatar} label="Profile" />
+          <GlassButton content="favorite" active={liked} onToggle={setLiked} label="Favourites" />
+        </nav>
+      </main>
+    </MotionConfig>
   )
 }

@@ -1,0 +1,121 @@
+/* Aviasales concept: design tokens.
+   Mirrors Figma variables in file 6zX9IefdtemGiLH7nfVJqa (collections Primitives / Color / Dimension).
+   Names match the WEB code syntax set on each Figma variable. */
+:root {
+  /* palette (Primitives) */
+  --palette-blue-500: #2480FF;
+  --palette-blue-400: #2A94FE;
+  --palette-blue-100: #ACE2FF;
+  --palette-orange-500: #F7803C;
+  --palette-orange-400: #FE9749;
+  --palette-orange-300: #F3AA42;
+  --palette-green-500: #4ABE64;
+  --palette-violet-400: #DE7CEB;
+  --palette-sky-400: #7DB7FF;
+  --palette-pink-500: #E72D5F;
+  --palette-neutral-0: #FFFFFF;
+  --palette-neutral-50: #F5F5F5;
+  --palette-neutral-100: #EEEEEE;
+  --palette-neutral-400: #AAAAAA;
+  --palette-neutral-800: #323232;
+  --palette-neutral-900: #181818;
+  --palette-ink-900: #262A33;
+  --palette-white-alpha-12: rgba(255, 255, 255, 0.12);
+  --palette-white-alpha-24: rgba(255, 255, 255, 0.24);
+  --palette-white-alpha-32: rgba(255, 255, 255, 0.32);
+
+  /* semantic color (Color / Light) */
+  --color-bg-screen: var(--palette-neutral-50);
+  --color-bg-surface: var(--palette-neutral-0);
+  --color-bg-surface-pressed: var(--palette-neutral-100);
+  --color-bg-brand: var(--palette-blue-500);
+  --color-bg-tab-selected: var(--palette-white-alpha-12);
+  --color-bg-tab-pressed: var(--palette-white-alpha-24);
+  --color-bg-cta-start: var(--palette-orange-400);
+  --color-bg-cta-end: var(--palette-orange-300);
+  --color-bg-hero-start: var(--palette-blue-400);
+  --color-bg-hero-end: var(--palette-blue-100);
+  --color-text-primary: var(--palette-neutral-900);
+  --color-text-heading: var(--palette-neutral-800);
+  --color-text-muted: var(--palette-neutral-400);
+  --color-text-on-brand: var(--palette-neutral-0);
+  --color-text-accent: var(--palette-blue-500);
+  --color-icon-on-brand: var(--palette-neutral-0);
+  --color-icon-favorite: var(--palette-pink-500);
+  --color-icon-ink: var(--palette-ink-900);
+  --color-icon-hot: var(--palette-orange-500);
+  --color-icon-anywhere: var(--palette-green-500);
+  --color-icon-smart: var(--palette-violet-400);
+  --color-icon-route: var(--palette-sky-400);
+
+  /* spacing & radius (Dimension) */
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-20: 20px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-36: 36px;
+  --radius-16: 16px;
+  --radius-20: 20px;
+  --radius-24: 24px;
+  --radius-32: 32px;
+  --radius-40: 40px;
+  --radius-64: 64px;
+  --radius-full: 999px;
+
+  /* gradients */
+  --gradient-cta: linear-gradient(101deg, var(--color-bg-cta-start), var(--color-bg-cta-end));
+
+  /* effect styles */
+  --glow-button: inset 0 0 44px 6px rgba(255, 255, 255, 0.24);
+  --glow-section: inset 0 0 72px 16px rgba(255, 255, 255, 0.20);
+  --glow-hero: inset 0 0 100px 12px rgba(255, 255, 255, 0.32);
+
+  /* text styles: SF Pro Rounded, letter-spacing -0.01em */
+  --font-rounded: ui-rounded, 'SF Pro Rounded', -apple-system, system-ui, sans-serif;
+  --text-heading-section: 600 28px/32px var(--font-rounded);
+  --text-tab-label: 600 20px/24px var(--font-rounded);
+  --text-field-value: 500 18px/20px var(--font-rounded);
+  --text-field-label: 500 12px/14px var(--font-rounded);
+  --text-button-label: 500 18px/20px var(--font-rounded);
+  --text-shortcut-label: 500 14px/16px var(--font-rounded);
+  --text-card-title: 500 16px/20px var(--font-rounded);
+  --text-card-meta: 400 14px/20px var(--font-rounded);
+  --tracking: -0.01em;
+}
+
+/* Code-only tokens: behaviour and effects that have no Figma variable.
+   Values come from the component descriptions on the Components page (103:1127)
+   and the iOS 27 "Liquid Glass – Regular – Small" kit used by Glass Button. */
+:root {
+  --overlay-pressed-button: rgba(0, 0, 0, 0.08); /* Search Button · Pressed */
+  --overlay-pressed-card: rgba(0, 0, 0, 0.12);   /* Plan Card · Pressed */
+  --opacity-tab-idle: 0.6;                       /* Search Tab · Selected=False */
+  --opacity-disabled: 0.5;                       /* Search Button · Disabled */
+  --scale-pressed-tab: 0.96;
+  --scale-pressed-button: 0.97;
+  --scale-pressed-tile: 0.95;
+  --scale-pressed-card: 0.97;
+  --caret-width: 2px;
+  --caret-height: 22px;
+  --size-icon: 24px;
+  --size-sticker: 48px;
+  --size-tab-w: 91px;
+  --size-tab-h: 84px;
+  --size-field-h: 62px;
+  --size-button-h: 68px;
+  --size-tile-h: 76px;
+  --size-card-w: 156px;
+  --size-glass-avatar: 48px;
+  --size-glass-favorite: 54px;
+  --size-avatar: 40px;
+  --glass-fill: rgba(250, 250, 250, 0.62);
+  --glass-blur: blur(14px) saturate(1.6);
+  --glass-shadow: 1.25px 0 0 -0.75px #d0d0d0, -1.25px 0 0 -0.75px #d0d0d0, 0 0 0 0.5px #e8e8e8, 0 8px 15px rgba(0, 0, 0, 0.02);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out: cubic-bezier(0.32, 0.72, 0, 1);
+  --duration-press: 250ms;
+  --duration-press-in: 50ms;
+}

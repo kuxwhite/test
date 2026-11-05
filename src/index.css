@@ -1,16 +1,10 @@
-/* Figma: Концепты / Screen 71:1738 (402 × 874) */
-:root {
-  --blue: #0e73ff;
-  --bg: #f5f5f5;
-  --ink: #181818;
-  --muted: #aaa;
-  --font: ui-rounded, 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
+/* Figma: Handoff → code (110:755) — Flights 106:283, Hotels 110:569 (402 × 874).
+   All values come from src/tokens.css. */
 * { box-sizing: border-box; }
-html, body { margin: 0; background: var(--bg); }
+html, body { margin: 0; background: var(--color-bg-screen); }
 body {
-  font-family: var(--font);
-  color: var(--ink);
+  font-family: var(--font-rounded);
+  color: var(--color-text-primary);
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior-y: none;
@@ -19,21 +13,21 @@ button, input { font: inherit; color: inherit; }
 button { background: none; border: 0; padding: 0; cursor: pointer; }
 img { display: block; }
 
-.screen { position: relative; max-width: 440px; margin: 0 auto; min-height: 100svh; background: var(--bg); overflow-x: hidden; }
+.screen { position: relative; max-width: 440px; margin: 0 auto; min-height: 100svh; background: var(--color-bg-screen); overflow-x: hidden; }
 
 /* ---------------------------------------------------------------- hero */
 .hero {
   position: relative;
-  height: 444px;
+  height: 440px; /* Figma 106:283 «Hero Image» */
   margin-bottom: -144px;
   padding-top: max(64px, calc(env(safe-area-inset-top) + 12px));
   overflow: hidden;
   /* behind the video: the hero's radial sky (also what shows while it loads) */
-  background: radial-gradient(402px 444px at 50% 0%, #2a94fe 0%, #4aa8fe 19.5%, #6bbbff 39%, #8bcfff 58.5%, #ace2ff 78%, rgba(255,255,255,0) 100%), var(--bg);
+  background: radial-gradient(402px 440px at 50% 0%, var(--color-bg-hero-start) 0%, var(--color-bg-hero-end) 78%, transparent 100%), var(--color-bg-screen);
 }
 .hero::after { /* inner glow */
   content: ''; position: absolute; inset: 0; pointer-events: none;
-  box-shadow: inset 0 0 100px 12px rgba(255, 255, 255, .32);
+  box-shadow: var(--glow-hero);
 }
 .scene {
   position: absolute; left: 0; right: 0; top: 0; height: 321px;
@@ -73,106 +67,8 @@ img { display: block; }
   .ws-curtain { animation: none; }
 }
 
-/* Figma «Rectangle 6»: sky haze under the status bar — not used with the window scenes */
-.hero-haze { display: none;
-  position: absolute; left: 0; top: 0; width: 100%; height: 192px; pointer-events: none;
-  background: radial-gradient(575.8px 275px at 50% -83px, #2a94fe 18.5%, #52a8fe 33.4%, #7abcff 48.3%, #a2d0ff 63.2%, #cae5ff 78%, rgba(255,255,255,0) 100%);
-}
 /* Figma «Rectangle 7»: fade into the page behind the search sheet */
 .hero-fade {
   position: absolute; left: 0; top: 240px; width: 100%; height: 81px; pointer-events: none;
-  background: linear-gradient(to bottom, rgba(255,255,255,0), var(--bg));
+  background: linear-gradient(to bottom, transparent, var(--color-bg-screen));
 }
-
-.profile {
-  position: relative; z-index: 2; height: 48px; padding: 0 20px;
-  display: flex; align-items: center; justify-content: space-between; pointer-events: none;
-}
-.me { display: flex; align-items: center; gap: 8px; }
-.avatar { position: relative; width: 48px; height: 48px; border-radius: 100px; overflow: hidden; }
-.avatar img { width: 100%; height: 100%; object-fit: cover; }
-.avatar::after { /* glass rim */
-  content: ''; position: absolute; inset: 0; border-radius: inherit; mix-blend-mode: overlay;
-  background: radial-gradient(circle, rgba(255,255,255,0) 0%, #fff 100%);
-}
-.me-name { font-size: 16px; line-height: 20px; font-weight: 600; letter-spacing: -.16px; color: #fff; }
-.glass-btn {
-  pointer-events: auto; position: relative; width: 48px; height: 48px; border-radius: 100px;
-  display: grid; place-items: center;
-  background: rgba(255, 255, 255, .16);
-  -webkit-backdrop-filter: blur(12px) saturate(1.4); backdrop-filter: blur(12px) saturate(1.4);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, .04), inset 0 0 0 1px rgba(255, 255, 255, .28), inset 4px 4px 8px 4px rgba(255, 255, 255, .04);
-  transition: transform 250ms cubic-bezier(.34, 1.56, .64, 1), background-color 200ms ease;
-}
-.glass-btn:active { transform: scale(.94); transition-duration: 50ms; }
-.glass-btn.on { background: rgba(14, 115, 255, .45); }
-
-/* ---------------------------------------------------------------- content */
-.content { position: relative; z-index: 3; padding: 0 8px; }
-
-.search {
-  position: relative; display: flex; flex-direction: column; gap: 20px; padding: 20px;
-  border-radius: 40px; background: var(--blue); overflow: hidden;
-}
-.search::after {
-  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-  box-shadow: inset 0 0 72px 16px rgba(255, 255, 255, .2);
-}
-.tabs {
-  display: flex; gap: 20px; overflow-x: auto; scrollbar-width: none;
-  margin: 0 -20px; padding: 0 20px;
-}
-.tabs::-webkit-scrollbar { display: none; }
-.tab {
-  flex: none; display: flex; align-items: center; gap: 8px;
-  font-size: 28px; line-height: 32px; font-weight: 600; letter-spacing: -.28px; color: #fff;
-  opacity: .6; transition: opacity 200ms ease;
-}
-.tab.active { opacity: 1; }
-.fields { display: flex; flex-direction: column; align-items: center; position: relative; z-index: 1; }
-.field {
-  width: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px;
-  padding: 12px 24px; background: #fff; border-radius: 20px; cursor: text;
-}
-.field-label { font-size: 12px; line-height: 14px; font-weight: 500; letter-spacing: -.12px; color: var(--muted); }
-.field input {
-  width: 100%; border: 0; outline: 0; background: none; padding: 0; text-align: center;
-  font-size: 18px; line-height: 20px; font-weight: 500; letter-spacing: -.18px; color: var(--ink);
-  caret-color: var(--blue);
-}
-.connector { width: 48.5px; height: 3px; }
-.search-btn {
-  margin-top: 20px; width: 100%; position: relative; padding: 24px 10px; border-radius: 24px; overflow: hidden;
-  background: linear-gradient(101deg, #fe9749 0%, #f3aa42 100%);
-  font-size: 18px; line-height: 20px; font-weight: 500; letter-spacing: -.18px; color: #fff;
-  box-shadow: inset 0 0 16px 6px rgba(255, 255, 255, .12);
-  transition: transform 250ms cubic-bezier(.34, 1.56, .64, 1);
-}
-.search-btn:active { transform: scale(.97); transition-duration: 50ms; }
-
-.shortcuts { display: flex; gap: 4px; padding: 36px 0 32px; }
-.shortcut {
-  flex: 1 0 0; min-width: 0; height: 76px; padding: 8px 12px; border-radius: 20px; background: #fff;
-  display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px;
-  transition: transform 250ms cubic-bezier(.34, 1.56, .64, 1);
-}
-.shortcut:active { transform: scale(.96); transition-duration: 50ms; }
-.shortcut img { width: 48px; height: 48px; flex: none; }
-.shortcut span { font-size: 14px; line-height: 16px; font-weight: 500; letter-spacing: -.14px; text-align: center; color: var(--ink); }
-
-.plans {
-  position: relative; display: flex; flex-direction: column; gap: 20px; padding: 20px 20px 24px;
-  background: #fff; border-radius: 40px; margin-bottom: 8px;
-}
-.plans h2 { margin: 0; font-size: 28px; line-height: 32px; font-weight: 600; letter-spacing: -.28px; color: #323232; }
-.plans-row {
-  display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x mandatory;
-  margin: 0 -20px; padding: 0 20px; scroll-padding: 0 20px;
-}
-.plans-row::-webkit-scrollbar { display: none; }
-.plan { flex: 0 0 156px; display: flex; flex-direction: column; gap: 12px; scroll-snap-align: start; }
-.plan img { width: 156px; height: 156px; object-fit: cover; border-radius: 32px; }
-.plan-info { display: flex; flex-direction: column; gap: 8px; }
-.plan-info p { margin: 0; font-size: 14px; line-height: 20px; letter-spacing: -.14px; color: var(--ink); }
-.plan-info .plan-title { font-size: 16px; font-weight: 500; letter-spacing: -.16px; }
-

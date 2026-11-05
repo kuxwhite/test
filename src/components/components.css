@@ -1,0 +1,158 @@
+/* Components from the Figma page «Components» (103:1127). Tokens only: src/tokens.css. */
+
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------------------------------------------------------------- Search Card */
+.search-card {
+  position: relative; display: flex; flex-direction: column; gap: var(--space-16);
+  padding: var(--space-16) var(--space-20) var(--space-20);
+  border-radius: var(--radius-40); background: var(--color-bg-brand); overflow: hidden;
+}
+.search-tabs { display: flex; gap: var(--space-12); justify-content: center; }
+.search-card__body { position: relative; }
+.search-card__form { display: flex; flex-direction: column; gap: var(--space-16); }
+
+/* ---------------------------------------------------------------- Search Tab */
+.search-tab {
+  width: var(--size-tab-w); height: var(--size-tab-h); padding: var(--space-16);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-4);
+  border-radius: var(--radius-24); color: var(--color-text-on-brand);
+  opacity: var(--opacity-tab-idle); background: transparent;
+  transition: opacity 200ms ease, background-color 200ms ease, transform var(--duration-press) var(--ease-spring);
+}
+.search-tab.is-selected { opacity: 1; background: var(--color-bg-tab-selected); }
+.search-tab:active { background: var(--color-bg-tab-pressed); transform: scale(var(--scale-pressed-tab)); transition-duration: 200ms, 200ms, var(--duration-press-in); }
+.search-tab:focus-visible { outline: 2px solid var(--color-text-on-brand); outline-offset: 2px; }
+.search-tab__icon { display: grid; width: var(--size-icon); height: var(--size-icon); color: var(--color-icon-on-brand); }
+.search-tab__label { font: var(--text-tab-label); letter-spacing: var(--tracking); white-space: nowrap; }
+
+/* ---------------------------------------------------------------- fields */
+.field-stack { display: flex; flex-direction: column; align-items: center; }
+.notch { display: block; width: 48.5px; height: 3px; }
+.field {
+  width: 100%; height: var(--size-field-h); padding: var(--space-12) var(--space-24);
+  display: flex; align-items: center; justify-content: center;
+  background: var(--color-bg-surface); border-radius: var(--radius-20); cursor: text;
+}
+.typed { position: relative; display: inline-flex; max-width: 100%; }
+.typed__mirror {
+  display: inline-flex; align-items: center; white-space: pre; overflow: hidden;
+  font: var(--text-field-value); letter-spacing: var(--tracking); color: var(--color-text-primary);
+}
+.typed__mirror.is-placeholder { color: var(--color-text-muted); }
+.typed__input {
+  position: absolute; inset: 0; width: 100%; min-width: 40px; margin: 0; padding: 0; border: 0; outline: 0;
+  background: transparent; color: transparent; caret-color: transparent;
+  font: var(--text-field-value); letter-spacing: var(--tracking); text-align: inherit;
+}
+.typed__input::selection { background: transparent; }
+.caret {
+  display: inline-block; width: var(--caret-width); height: var(--caret-height); margin-left: 1px;
+  border-radius: 1px; background: var(--color-text-accent);
+  animation: caret-blink 1.06s steps(1) infinite;
+}
+@keyframes caret-blink { 50% { opacity: 0; } }
+
+/* Search Field: Filled / Placeholder / Focused */
+.search-field { flex-direction: column; gap: var(--space-4); text-align: center; }
+.search-field__label { font: var(--text-field-label); letter-spacing: var(--tracking); color: var(--color-text-muted); transition: color 150ms ease; }
+.search-field.is-focused .search-field__label { color: var(--color-text-accent); }
+.search-field .typed__mirror { min-height: 20px; }
+
+/* Icon Field: Placeholder / Filled / Focused */
+.icon-field { gap: 10px; }
+.icon-field__icon { display: grid; width: var(--size-icon); height: var(--size-icon); color: var(--color-text-muted); transition: color 150ms ease; }
+.icon-field.is-filled .icon-field__icon { color: var(--color-text-primary); }
+.icon-field.is-focused .icon-field__icon { color: var(--color-text-accent); }
+
+/* ---------------------------------------------------------------- Search Button */
+.search-button {
+  position: relative; width: 100%; height: var(--size-button-h); padding: var(--space-24);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  border-radius: var(--radius-24); background: var(--gradient-cta); box-shadow: var(--glow-button);
+  font: var(--text-button-label); letter-spacing: var(--tracking); color: var(--color-text-on-brand);
+  transition: transform var(--duration-press) var(--ease-spring), opacity 200ms ease;
+}
+.search-button::before { content: ''; position: absolute; inset: 0; background: var(--overlay-pressed-button); opacity: 0; transition: opacity 120ms ease; }
+.search-button > * { position: relative; }
+.search-button:active:not(:disabled) { transform: scale(var(--scale-pressed-button)); transition-duration: var(--duration-press-in), 200ms; }
+.search-button:active:not(:disabled)::before { opacity: 1; }
+.search-button:disabled { opacity: var(--opacity-disabled); cursor: default; }
+.search-button.is-loading { cursor: progress; }
+.search-button:focus-visible { outline: 2px solid var(--color-text-on-brand); outline-offset: 3px; }
+.spinner { display: block; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------------------------------------------------------------- Shortcut Tile */
+.shortcuts { display: flex; gap: var(--space-4); padding: var(--space-36) 0 var(--space-32); }
+.shortcut-tile {
+  flex: 1 0 0; min-width: 0; height: var(--size-tile-h); padding: var(--space-8) var(--space-12);
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: var(--space-4);
+  border-radius: var(--radius-20); background: var(--color-bg-surface);
+  transition: transform var(--duration-press) var(--ease-spring), background-color 150ms ease;
+}
+.shortcut-tile:active { background: var(--color-bg-surface-pressed); transform: scale(var(--scale-pressed-tile)); transition-duration: var(--duration-press-in), 150ms; }
+.shortcut-tile__icon { display: grid; flex: none; width: var(--size-sticker); height: var(--size-sticker); }
+.shortcut-tile__label { font: var(--text-shortcut-label); letter-spacing: var(--tracking); text-align: center; color: var(--color-text-primary); white-space: pre-line; }
+
+/* ---------------------------------------------------------------- Plans + Plan Card */
+.plans {
+  position: relative; display: flex; flex-direction: column; gap: var(--space-20); padding: var(--space-20);
+  border-radius: var(--radius-40); background: var(--color-bg-surface); box-shadow: var(--glow-section);
+}
+.plans__title { margin: 0; font: var(--text-heading-section); letter-spacing: var(--tracking); color: var(--color-text-heading); }
+.plans__row {
+  display: flex; gap: var(--space-12); overflow-x: auto; scrollbar-width: none;
+  scroll-snap-type: x mandatory; margin: 0 calc(-1 * var(--space-20)); padding: 0 var(--space-20); scroll-padding: 0 var(--space-20);
+}
+.plans__row::-webkit-scrollbar { display: none; }
+.plan-card {
+  flex: 0 0 var(--size-card-w); display: flex; flex-direction: column; gap: var(--space-12);
+  scroll-snap-align: start; color: var(--color-text-primary); text-decoration: none;
+  transition: transform var(--duration-press) var(--ease-spring);
+  -webkit-touch-callout: none;
+}
+.plan-card:active { transform: scale(var(--scale-pressed-card)); transition-duration: var(--duration-press-in); }
+.plan-card__image { position: relative; display: block; width: var(--size-card-w); aspect-ratio: 1; border-radius: var(--radius-32); overflow: hidden; background: var(--color-bg-surface); }
+.plan-card__image img { width: 100%; height: 100%; object-fit: cover; }
+.plan-card__image::after { content: ''; position: absolute; inset: 0; background: var(--overlay-pressed-card); opacity: 0; transition: opacity 120ms ease; }
+.plan-card:active .plan-card__image::after { opacity: 1; }
+.plan-card__info { display: flex; flex-direction: column; gap: var(--space-8); }
+.plan-card__title { font: var(--text-card-title); letter-spacing: var(--tracking); white-space: pre-line; }
+.plan-card__meta { font: var(--text-card-meta); letter-spacing: var(--tracking); }
+
+/* ---------------------------------------------------------------- Glass Button / Tab Bar */
+.tab-bar {
+  position: fixed; z-index: 10; left: 50%; bottom: 0; translate: -50% 0;
+  width: 100%; max-width: 440px; padding: var(--space-16) 25px max(25px, env(safe-area-inset-bottom));
+  display: flex; align-items: flex-end; justify-content: space-between; pointer-events: none;
+}
+.glass-button {
+  pointer-events: auto; position: relative; display: grid; place-items: center; border-radius: var(--radius-full);
+  transition: transform var(--duration-press) var(--ease-spring);
+}
+.glass-button::before { /* the glass pill sits 4 px outside the button box, as in the kit */
+  content: ''; position: absolute; inset: calc(-1 * var(--space-4)); border-radius: inherit;
+  background: var(--glass-fill); box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+}
+.glass-button > * { position: relative; }
+.glass-button:active { transform: scale(var(--scale-pressed-tab)); transition-duration: var(--duration-press-in); }
+.glass-button--avatar { width: var(--size-glass-avatar); height: var(--size-glass-avatar); }
+.glass-button__avatar { width: var(--size-avatar); height: var(--size-avatar); border-radius: var(--radius-full); overflow: hidden; }
+.glass-button__avatar img { width: 100%; height: 100%; object-fit: cover; }
+.glass-button--favorite { width: var(--size-glass-favorite); height: var(--size-glass-favorite); color: var(--color-text-primary); }
+.glass-button--favorite.is-active { color: var(--color-icon-favorite); }
+.glass-button__icon { display: grid; width: var(--size-icon); height: var(--size-icon); }
+
+@media (prefers-reduced-motion: reduce) {
+  .caret { animation: none; }
+}
+
+/* ---------------------------------------------------------------- page */
+.content {
+  position: relative; z-index: 3; padding: 0 var(--space-8);
+  /* room for the floating Tab Bar */
+  padding-bottom: calc(var(--size-glass-favorite) + var(--space-16) + 25px + var(--space-8));
+}
+.below--hotels { padding-top: var(--space-20); }
