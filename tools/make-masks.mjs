@@ -76,6 +76,13 @@ function pack3(r, g, b) {
   return sharp(Buffer.from(out), { raw: { width: W, height: H, channels: 3 } }).png({ compressionLevel: 9 })
 }
 
+// White + alpha copy of a mask, for CSS masks of the DOM actor layers.
+async function saveAlpha(mask, path) {
+  const rgba = new Uint8Array(W * H * 4)
+  for (let i = 0; i < W * H; i++) { rgba[i * 4] = rgba[i * 4 + 1] = rgba[i * 4 + 2] = 255; rgba[i * 4 + 3] = mask[i] }
+  await sharp(Buffer.from(rgba), { raw: { width: W, height: H, channels: 4 } }).resize(768, 512).png({ compressionLevel: 9 }).toFile(path)
+}
+
 async function preview(scene, layers, path) {
   const img = await readRGB(scene)
   const out = new Uint8Array(img)
@@ -125,6 +132,7 @@ const clouds = mul(glass, await blur(rampY(572, 590), 4))
 await save1(glass, `${OUT}/flights-glass.png`)
 await save1(clouds, `${OUT}/flights-clouds.png`)
 await pack3(glass, clouds, blank()).toFile(`${OUT}/flights-pack-a.png`)
+await saveAlpha(glassHard, `${OUT}/flights-glass-alpha.png`) // planes and birds fly behind the frame
 // Loop textures from frame-free bands of the glass: far = fine clouds at the
 // horizon, mid = bigger clouds lower down. The near wisps are procedural.
 const far = await seamlessTile('flights', [616, 578, 300, 72], 60, `${OUT}/flights-tile-far.png`)
@@ -165,12 +173,19 @@ for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) awayFromFrame[y * W + x]
 const curtain = mul(await blur(await dilate(curtainShape, 14), 10), awayFromFrame)
 for (const [n, m] of Object.entries({ view, sky, water, shutters, curtain, plant })) await save1(m, `${OUT}/hotels-${n}.png`)
 await pack3(view, sky, water).toFile(`${OUT}/hotels-pack-a.png`)
-// Alpha version of the sky for the CSS mask of the gull layer (DOM, not WebGL).
-{
-  const rgba = new Uint8Array(W * H * 4)
-  for (let i = 0; i < W * H; i++) { rgba[i * 4] = rgba[i * 4 + 1] = rgba[i * 4 + 2] = 255; rgba[i * 4 + 3] = sky[i] }
-  await sharp(Buffer.from(rgba), { raw: { width: W, height: H, channels: 4 } }).resize(768, 512).png({ compressionLevel: 9 }).toFile(`${OUT}/hotels-sky-alpha.png`)
+// Alpha copies for the DOM actors: gulls in the sky, boats on the sea, cars and people in the view.
+await saveAlpha(sky, `${OUT}/hotels-sky-alpha.png`)
+await saveAlpha(water, `${OUT}/hotels-water-alpha.png`)
+await saveAlpha(view, `${OUT}/hotels-view-alpha.png`)
+// Trees and bushes in the town: green pixels in the view below the mountains.
+const treesHard = blank()
+for (let y = 470; y < 790; y++) for (let x = 470; x < 1060; x++) {
+  const i = y * W + x, r = hotelsRGB[i * 3], g = hotelsRGB[i * 3 + 1], b = hotelsRGB[i * 3 + 2]
+  if (g > r + 18 && g > b + 8 && g > 70) treesHard[i] = 255
 }
+const trees = mul(sub(await blur(await dilate(treesHard, 4), 3), await dilate(plantHard, 18)), view)
+await save1(trees, `${OUT}/hotels-trees.png`)
+await pack3(trees, blank(), blank()).toFile(`${OUT}/hotels-pack-c.png`)
 await pack3(shutters, curtain, plant).toFile(`${OUT}/hotels-pack-b.png`)
 await preview('hotels', [
   { name: 'view (parallax)', mask: view, color: [40, 120, 255] },
@@ -179,6 +194,7 @@ await preview('hotels', [
   { name: 'casements (hinges)', mask: shutters, color: [255, 150, 0] },
   { name: 'curtain (cloth wave)', mask: curtain, color: [255, 50, 160] },
   { name: 'plant (sway)', mask: plant, color: [150, 60, 255] },
+  { name: 'trees (wind)', mask: trees, color: [255, 230, 0] },
 ], `${REF}/masks-preview-hotels.png`)
 
 console.log('tiles', { far, mid })

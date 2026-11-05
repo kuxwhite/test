@@ -69,7 +69,8 @@ export class LiveScene {
     const textures = this.id === 'flights'
       ? { u_img: 'scenes/flights.png', u_mask: 'scenes/masks/flights-pack-a.png',
           u_far: ['scenes/masks/flights-tile-far.png', true], u_mid: ['scenes/masks/flights-tile-mid.png', true] }
-      : { u_img: 'scenes/hotels.png', u_maskA: 'scenes/masks/hotels-pack-a.png', u_maskB: 'scenes/masks/hotels-pack-b.png' }
+      : { u_img: 'scenes/hotels.png', u_maskA: 'scenes/masks/hotels-pack-a.png', u_maskB: 'scenes/masks/hotels-pack-b.png',
+          u_maskC: 'scenes/masks/hotels-pack-c.png' }
     const entries = Object.entries(textures)
     const images = await Promise.all(entries.map(([, v]) => loadImage(BASE + (Array.isArray(v) ? v[0] : v))))
     if (this.destroyed) return // unmounted while loading (StrictMode remount shares the context)
@@ -123,6 +124,7 @@ export class LiveScene {
       gl.uniform3f(u('u_plant'), ...h.plant.pivot, h.plant.maxDeg * DEG)
       gl.uniform2f(u('u_sky'), h.sky.drift, h.sky.period)
       gl.uniform2f(u('u_water'), h.water.ripple, h.water.sparkle)
+      gl.uniform2f(u('u_trees'), h.trees.amp, h.trees.flutter)
     }
     gl.uniform1f(u('u_still'), this.reduced ? 1 : 0)
   }

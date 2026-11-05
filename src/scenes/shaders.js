@@ -122,6 +122,8 @@ void main() {
 export const HOTELS = COMMON + `
 uniform sampler2D u_maskA;     // R view, G sky, B water
 uniform sampler2D u_maskB;     // R casements, G curtain, B plant
+uniform sampler2D u_maskC;     // R trees and bushes in the town
+uniform vec2 u_trees;          // sway amp (src px), flutter speed
 uniform vec2 u_wind;           // speed, gust strength
 uniform float u_windScale;     // 1, or less with reduced motion
 uniform vec4 u_caseL;          // hinge x, width, center y, (unused)
@@ -165,10 +167,19 @@ void main() {
   if (A.r > 0.002) {
     vec2 v = VIEW_C + (p - VIEW_C) / 1.04 - u_par;
     if (u_still < 0.5) {
-      v.x -= A.g * u_sky.x * sin(t * TAU / u_sky.y);
-      v += A.g * 1.5 * (vec2(noise2(v * 0.01 + t * 0.03), noise2(v * 0.01 - t * 0.02)) - 0.5);
-      float rip = sin(v.x * 0.11 + t * 2.1) * 0.6 + sin(v.x * 0.047 - t * 1.4 + v.y * 0.21) * 0.4;
+      // clouds: wide slow drift, eased to zero at the frame so it never smears in
+      float edge = smoothstep(474.0, 580.0, p.x) * (1.0 - smoothstep(950.0, 1052.0, p.x));
+      v.x -= A.g * edge * u_sky.x * sin(t * TAU / u_sky.y);
+      v += A.g * 2.5 * (vec2(noise2(v * 0.008 + t * 0.05), noise2(v * 0.008 - t * 0.04)) - 0.5);
+      // water: ripples travelling towards the shore plus a sideways current
+      float rip = sin(v.x * 0.11 - t * 2.6) * 0.6 + sin(v.x * 0.047 + v.y * 0.21 - t * 1.7) * 0.4;
       v.y += A.b * rip * u_water.x;
+      v.x += A.b * sin(v.y * 0.32 - t * 3.1) * u_water.x * 0.7;
+      // trees and bushes: the shared wind plus a per-tree flutter
+      float C = texture(u_maskC, p / SIZE).r;
+      float flutter = noise2(v * 0.035 + vec2(t * u_trees.y, 0.0)) - 0.5;
+      v.x += C * u_trees.x * (flutter * 1.2 + w * 0.9);
+      v.y += C * u_trees.x * 0.35 * (noise2(v * 0.05 - t * u_trees.y * 0.8) - 0.5);
     }
     vec3 viewC = img(v);
     if (u_still < 0.5) {

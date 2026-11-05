@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { animate } from 'motion'
 import { LiveScene, webgl2Available } from './scenes/LiveScene.js'
-import { GullFlock } from './scenes/gulls.js'
+import { ActorDirector } from './scenes/actors.js'
 import { SCENE_CONFIG as C } from './scenes/config.js'
 
 /*
@@ -10,7 +10,8 @@ import { SCENE_CONFIG as C } from './scenes/config.js'
  * Each scene is a box the size of its illustration, centred in the hero, so the
  * plane glass and the hotel opening sit at the same height (y ≈ 152). Inside the
  * box a WebGL canvas re-renders the illustration with motion inside masks
- * (src/scenes/*). The hotel box also holds the gull layer.
+ * (src/scenes/*). On top, masked DOM layers hold the actors: airliners and
+ * birds behind the glass; gulls, sailboats, cars and people in the hotel view.
  *
  * Tab change: crossfade + scale + short blur on the boxes (Motion, interruptible),
  * both scenes keep living during it. Tilt/finger parallax goes into the shader
@@ -23,6 +24,11 @@ const SCENES = {
   flights: { height: 358, top: -57, width: 537 },
   hotels: { height: 321, top: 0, width: 481.5 },
 }
+// Actor layers per scene and the alpha mask each one is clipped to.
+const LAYERS = {
+  flights: { glass: 'flights-glass-alpha.png' },
+  hotels: { sky: 'hotels-sky-alpha.png', water: 'hotels-water-alpha.png', town: 'hotels-view-alpha.png' },
+}
 const sceneOf = (tab) => (tab === 'flights' ? 'flights' : 'hotels')
 const EASE = [0.32, 0.72, 0, 1]
 const TRANSITION_MS = 650
@@ -33,9 +39,9 @@ export default function WindowScene({ tab, visible = true }) {
   const rootRef = useRef(null)
   const sceneRefs = useRef({})
   const canvasRefs = useRef({})
-  const gullLayerRef = useRef(null)
+  const layerRefs = useRef({ flights: {}, hotels: {} })
   const live = useRef({})
-  const flock = useRef(null)
+  const actors = useRef({})
   const first = useRef(true)
   const [fallback, setFallback] = useState(false)
   // run state lives in a ref: changing it never re-renders
@@ -51,9 +57,9 @@ export default function WindowScene({ tab, visible = true }) {
       if (on && (id === r.active || inTransition)) scene.start()
       else scene.stop()
     }
-    if (flock.current) {
-      if (on && r.active === 'hotels' && !reducedMotion()) flock.current.start()
-      else flock.current.stop()
+    for (const [id, director] of Object.entries(actors.current)) {
+      if (on && id === r.active && !reducedMotion()) director.start()
+      else director.stop()
     }
   }
 
@@ -66,8 +72,9 @@ export default function WindowScene({ tab, visible = true }) {
       scenes[id].ready.then(updateRunning).catch((err) => { console.warn('[WindowScene] static fallback:', err.message); setFallback(true) })
     }
     live.current = scenes
-    const gulls = new GullFlock(gullLayerRef.current, SCENES.hotels.height / 1024)
-    flock.current = gulls
+    const directors = {}
+    for (const [id, s] of Object.entries(SCENES)) directors[id] = new ActorDirector(id, layerRefs.current[id], s.height / 1024)
+    actors.current = directors
     const onResize = () => Object.values(scenes).forEach((sc) => sc.resize())
     const onVisibility = () => { run.current.hidden = document.hidden; updateRunning() }
     window.addEventListener('resize', onResize)
@@ -76,9 +83,9 @@ export default function WindowScene({ tab, visible = true }) {
       window.removeEventListener('resize', onResize)
       document.removeEventListener('visibilitychange', onVisibility)
       Object.values(scenes).forEach((sc) => sc.destroy())
-      gulls.destroy()
+      Object.values(directors).forEach((d) => d.destroy())
       live.current = {}
-      flock.current = null
+      actors.current = {}
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -198,10 +205,10 @@ export default function WindowScene({ tab, visible = true }) {
           {fallback
             ? <img className="ws-img" src={`${BASE}scenes/${id}.png`} alt="" draggable="false" />
             : <canvas className="ws-canvas" ref={(el) => { canvasRefs.current[id] = el }} />}
-          {id === 'hotels' && (
-            <div className="ws-gulls" ref={gullLayerRef}
-                 style={{ WebkitMaskImage: `url(${BASE}scenes/masks/hotels-sky-alpha.png)`, maskImage: `url(${BASE}scenes/masks/hotels-sky-alpha.png)` }} />
-          )}
+          {Object.entries(LAYERS[id]).map(([name, mask]) => (
+            <div key={name} className="ws-actors" ref={(el) => { if (el) layerRefs.current[id][name] = el }}
+                 style={{ WebkitMaskImage: `url(${BASE}scenes/masks/${mask})`, maskImage: `url(${BASE}scenes/masks/${mask})` }} />
+          ))}
         </div>
       ))}
       <div className="scene-dim" aria-hidden />
