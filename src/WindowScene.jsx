@@ -10,8 +10,9 @@ import { animate } from 'motion'
  *   base     — the illustration, static (interior);
  *   view     — a copy masked to the opening, slightly enlarged, moved by
  *              parallax (tilt + finger);
- *   flow     — plane only: two copies of the clouds that drift and hand over
- *              to each other by crossfade, so the drift loops with no seam;
+ *   clouds   — plane only: the clouds below the horizon, a bit larger,
+ *              drifting slowly back and forth (seamless ping-pong loop);
+ *   breathe  — hotel only: the view slowly zooms in and out;
  *   curtain  — hotel only: a copy masked to the tulle, swaying gently.
  * Masks are derived from the illustrations by scripts/make-scene-fx.py.
  *
@@ -28,14 +29,26 @@ const SCENES = {
     height: 358, top: -57, width: 537,
     opening: { x: 766, y: 598 },  // centre of the glass, source px
     zoom: 1.1, amp: 4.5,          // zoom leaves ≥ amp px of slack at the glass edge
-    clouds: { horizon: 580, drift: 10, seconds: 12 }, // source px, css px, s per pass
+    clouds: { horizon: 580, zoom: 1.15, drift: 8, seconds: 11 }, // source px, ×, ±css px, s per pass
   },
   hotels: {
     height: 321, top: 0, width: 481.5,
     opening: { x: 764, y: 485 },
     zoom: 1.1, amp: 8,
-    curtain: { x: 1350, y: 0 },   // the tulle hangs from here
+    breathe: { zoom: 1.035, seconds: 9 },
+    curtain: { x: 1350, y: 0, angle: 0.9, seconds: 4.5 }, // the tulle hangs from here
   },
+}
+
+// Mask longhands, prefixed and not: the shorthand with var() is fragile in Safari.
+const maskStyle = (url) => ({
+  WebkitMaskImage: `url(${url})`, maskImage: `url(${url})`,
+  WebkitMaskSize: '100% 100%', maskSize: '100% 100%',
+  WebkitMaskRepeat: 'no-repeat', maskRepeat: 'no-repeat',
+})
+const fadeFrom = (y) => {
+  const g = `linear-gradient(to bottom, transparent ${y}px, #000 ${y + 16}px)`
+  return { WebkitMaskImage: g, maskImage: g }
 }
 
 const sceneOf = (tab) => (tab === 'flights' ? 'flights' : 'hotels')
@@ -78,6 +91,41 @@ export default function WindowScene({ tab }) {
       }, opts)
     }
     first.current = false
+  }, [active])
+
+  // ---- idle life: clouds, breathing view, curtain (Web Animations API) ------
+  const idleRefs = useRef({})
+  const idleAnims = useRef({})
+  useEffect(() => {
+    if (reducedMotion()) return
+    const loop = (el, frames, seconds) => el && el.animate(frames, {
+      duration: seconds * 1000, iterations: Infinity, direction: 'alternate', easing: 'ease-in-out',
+    })
+    const f = SCENES.flights.clouds, h = SCENES.hotels
+    const anims = {
+      flights: [loop(idleRefs.current.clouds, [
+        { transform: `translate3d(${f.drift}px, 0, 0) scale(${f.zoom})` },
+        { transform: `translate3d(${-f.drift}px, 0, 0) scale(${f.zoom})` },
+      ], f.seconds)],
+      hotels: [
+        loop(idleRefs.current.breathe, [{ transform: 'scale(1)' }, { transform: `scale(${h.breathe.zoom})` }], h.breathe.seconds),
+        loop(idleRefs.current.curtain, [
+          { transform: `rotate(${-h.curtain.angle}deg) skewX(${h.curtain.angle * 0.6}deg)` },
+          { transform: `rotate(${h.curtain.angle}deg) skewX(${-h.curtain.angle * 0.6}deg)` },
+        ], h.curtain.seconds),
+      ],
+    }
+    idleAnims.current = anims
+    return () => Object.values(anims).flat().forEach((a) => a && a.cancel())
+  }, [])
+  useEffect(() => { // only the visible scene keeps moving
+    for (const [id, list] of Object.entries(idleAnims.current)) {
+      for (const a of list) {
+        if (!a) continue
+        if (id === active) a.play()
+        else a.pause()
+      }
+    }
   }, [active])
 
   // ---- parallax: tilt + finger, spring, refs only --------------------------
@@ -160,14 +208,14 @@ export default function WindowScene({ tab }) {
       drag.y = clamp((e.clientY - dragState.start.y) / 110) * 0.6
       kick()
     }
-    const onUp = (e) => {
-      if (dragState.start && e.type === 'pointerup') onTap()
+    const onUp = () => {
       dragState.start = null
       drag.x = drag.y = 0
       kick()
     }
 
     root.addEventListener('pointerdown', onDown)
+    root.addEventListener('click', onTap)
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
     window.addEventListener('pointercancel', onUp)
@@ -175,6 +223,7 @@ export default function WindowScene({ tab }) {
     return () => {
       cancelAnimationFrame(loop.raf)
       root.removeEventListener('pointerdown', onDown)
+      root.removeEventListener('click', onTap)
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup', onUp)
       window.removeEventListener('pointercancel', onUp)
@@ -196,28 +245,29 @@ export default function WindowScene({ tab }) {
           <div key={id} className="ws-scene" style={box} ref={(el) => { sceneRefs.current[id] = el }}>
             <img className="ws-img" src={src} alt="" draggable="false" />
 
-            <div className="ws-view" style={{ '--mask': `url(${BASE}scenes/fx/${id}-view-mask.png)` }}>
+            <div className="ws-view" style={maskStyle(`${BASE}scenes/fx/${id}-view-mask.png`)}>
               <div className="ws-move" style={{ transformOrigin: viewOrigin, transform: `scale(${s.zoom})` }}
                    ref={(el) => { moveRefs.current[id] = el }}>
-                <img className="ws-img" src={src} alt="" draggable="false" />
-                {s.clouds && [0, 1].map((n) => (
-                  <div key={n} className="ws-flow" style={{
-                    '--horizon': `${s.clouds.horizon * k}px`,
-                    '--drift': `${s.clouds.drift}px`,
-                    animationDuration: `${s.clouds.seconds}s`,
-                    animationDelay: `${-n * s.clouds.seconds / 2}s`,
-                  }}>
+                <div className="ws-layer" style={{ transformOrigin: viewOrigin }}
+                     ref={s.breathe ? (el) => { idleRefs.current.breathe = el } : undefined}>
+                  <img className="ws-img" src={src} alt="" draggable="false" />
+                </div>
+                {s.clouds && (
+                  <div className="ws-layer" style={{
+                    transformOrigin: viewOrigin, transform: `scale(${s.clouds.zoom})`,
+                    ...fadeFrom(s.clouds.horizon * k),
+                  }} ref={(el) => { idleRefs.current.clouds = el }}>
                     <img className="ws-img" src={src} alt="" draggable="false" />
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
             {s.curtain && (
               <div className="ws-curtain" style={{
-                '--mask': `url(${BASE}scenes/fx/hotels-curtain-mask.png)`,
+                ...maskStyle(`${BASE}scenes/fx/hotels-curtain-mask.png`),
                 transformOrigin: `${s.curtain.x * k}px ${s.curtain.y * k}px`,
-              }}>
+              }} ref={(el) => { idleRefs.current.curtain = el }}>
                 <img className="ws-img" src={src} alt="" draggable="false" />
               </div>
             )}

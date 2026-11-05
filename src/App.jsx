@@ -89,7 +89,6 @@ export default function App() {
       <main className="screen">
         <header className="hero">
           <WindowScene tab={tab} />
-          <div className="hero-fade" aria-hidden />
         </header>
 
         <div className="content">
