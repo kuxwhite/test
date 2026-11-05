@@ -1,5 +1,9 @@
 # Экран поиска: «вид из окна»
 
+> **Нативный прототип** (Expo / React Native, открывается на iPhone в Expo Go) — в папке
+> [`native/`](native/README.md). Ниже — веб-версия, с которой всё начиналось.
+
+
 React + Vite прототип по Figma (`6zX9IefdtemGiLH7nfVJqa`). Источник правды — секция
 «Handoff → code» (110:755): Flights 106:283, Hotels 110:569. Полное ТЗ — в [HANDOFF.md](HANDOFF.md).
 
