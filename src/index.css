@@ -13,11 +13,11 @@ button, input { font: inherit; color: inherit; }
 button { background: none; border: 0; padding: 0; cursor: pointer; }
 img { display: block; }
 
-.screen { position: relative; max-width: 440px; margin: 0 auto; min-height: 100svh; background: var(--color-bg-screen); overflow-x: hidden; }
+.screen { position: relative; max-width: 440px; margin: 0 auto; min-height: 100svh; background: var(--color-bg-screen); overflow-x: clip; /* clip, not hidden: keeps the sticky hero working */ }
 
 /* ---------------------------------------------------------------- hero */
-.hero {
-  position: relative;
+.hero { /* pinned under the content: the search sheet slides over it */
+  position: sticky; top: 0; z-index: 0;
   height: 440px; /* Figma 106:283 «Hero Image» */
   margin-bottom: -144px;
   padding-top: max(64px, calc(env(safe-area-inset-top) + 12px));
@@ -37,13 +37,28 @@ img { display: block; }
   mask-image: linear-gradient(to bottom, #000 230px, transparent 300px);
 }
 
-/* ---- WindowScene: «вид из окна» (HANDOFF.md §4–5) ---- */
+/* ---- WindowScene: living scenes (WebGL) ---- */
+.scene { transform-origin: 50% 0; will-change: transform; }
 .ws-scene {
-  position: absolute; left: 50%; margin-left: 0; translate: -50% 0;
+  position: absolute; left: 50%; translate: -50% 0;
   opacity: 0; will-change: opacity, transform, filter; pointer-events: none;
 }
-.ws-img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; -webkit-user-drag: none; }
-.ws-view, .ws-curtain { position: absolute; inset: 0; }
-.ws-move, .ws-layer { position: absolute; inset: 0; will-change: transform; }
-.ws-curtain { will-change: transform; }
+.ws-canvas, .ws-img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; display: block; -webkit-user-drag: none; }
+.ws-gulls {
+  position: absolute; inset: 0; overflow: hidden;
+  -webkit-mask-size: 100% 100%; mask-size: 100% 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+}
+.gull { position: absolute; left: 0; top: 0; overflow: visible; will-change: transform; }
+.gull g { transform-box: fill-box; transform-origin: 50% 70%; }
+.gull path { fill: none; stroke: var(--gull-color); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 
+/* The content slides over the pinned hero; meanwhile the scene recedes:
+   moves up at 0.3× the scroll, grows 1 → 1.06 and dims to 15%.
+   Safari 26+: scroll-driven animation; elsewhere App.jsx drives the same values. */
+.scene-dim { position: absolute; inset: 0; background: var(--overlay-scene-dim); opacity: 0; pointer-events: none; }
+@supports (animation-timeline: scroll()) {
+  .scene { animation: scene-recede linear both; animation-timeline: scroll(root block); animation-range: 0 var(--recede-distance); }
+  .scene-dim { animation: scene-dim linear both; animation-timeline: scroll(root block); animation-range: 0 var(--recede-distance); }
+}
+@keyframes scene-recede { to { transform: translate3d(0, calc(var(--recede-distance) * -0.3), 0) scale(var(--recede-scale)); } }
+@keyframes scene-dim { to { opacity: var(--recede-dim); } }

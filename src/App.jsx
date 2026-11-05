@@ -1,5 +1,5 @@
 import { AnimatePresence, MotionConfig, motion } from 'motion/react'
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import WindowScene from './WindowScene.jsx'
 import SearchTab from './components/SearchTab.jsx'
 import RouteFields from './components/RouteFields.jsx'
@@ -69,7 +69,43 @@ function AutoHeight({ children }) {
   )
 }
 
+// Scroll: the hero is pinned (sticky) and the content slides over it.
+// - pause the scene once the sheet fully covers the hero (IntersectionObserver);
+// - where scroll-driven animations are missing, drive the recede with rAF.
+function useHeroCover(heroRef, sentinelRef) {
+  const [heroVisible, setHeroVisible] = useState(true)
+  useEffect(() => {
+    const io = new IntersectionObserver(([e]) => setHeroVisible(e.isIntersecting || e.boundingClientRect.top > 0))
+    io.observe(sentinelRef.current)
+    return () => io.disconnect()
+  }, [sentinelRef])
+  useEffect(() => {
+    if (CSS.supports('animation-timeline: scroll()')) return
+    const scene = heroRef.current.querySelector('.scene')
+    const dim = heroRef.current.querySelector('.scene-dim')
+    const css = getComputedStyle(document.documentElement)
+    const dist = parseFloat(css.getPropertyValue('--recede-distance')) || 300
+    const scale = parseFloat(css.getPropertyValue('--recede-scale')) || 1.06
+    const maxDim = parseFloat(css.getPropertyValue('--recede-dim')) || 0.15
+    const frame = { id: 0 }
+    const paint = () => {
+      frame.id = 0
+      const k = Math.min(Math.max(window.scrollY / dist, 0), 1)
+      scene.style.transform = `translate3d(0, ${-0.3 * dist * k}px, 0) scale(${1 + (scale - 1) * k})`
+      dim.style.opacity = String(maxDim * k)
+    }
+    const onScroll = () => { if (!frame.id) frame.id = requestAnimationFrame(paint) }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    paint()
+    return () => { window.removeEventListener('scroll', onScroll); cancelAnimationFrame(frame.id) }
+  }, [heroRef])
+  return heroVisible
+}
+
 export default function App() {
+  const heroRef = useRef(null)
+  const sentinelRef = useRef(null)
+  const heroVisible = useHeroCover(heroRef, sentinelRef)
   const [tab, setTab] = useState('flights')
   const [route, setRoute] = useState({ from: 'Perm', to: '' })
   const [hotel, setHotel] = useState({ destination: '', dates: '', guests: '2 adults' })
@@ -87,11 +123,12 @@ export default function App() {
   return (
     <MotionConfig reducedMotion="user">
       <main className="screen">
-        <header className="hero">
-          <WindowScene tab={tab} />
+        <header className="hero" ref={heroRef}>
+          <WindowScene tab={tab} visible={heroVisible} />
         </header>
 
         <div className="content">
+          <div className="hero-sentinel" ref={sentinelRef} aria-hidden />
           <section className="search-card" aria-label="Search">
             <div className="search-tabs" role="tablist" aria-label="Search type">
               {TABS.map((t) => (

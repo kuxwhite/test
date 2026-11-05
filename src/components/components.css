@@ -156,3 +156,4 @@
   padding-bottom: calc(var(--size-glass-favorite) + var(--space-16) + 25px + var(--space-8));
 }
 .below--hotels { padding-top: var(--space-20); }
+.hero-sentinel { position: absolute; top: 0; left: 0; width: 1px; height: 1px; pointer-events: none; }
